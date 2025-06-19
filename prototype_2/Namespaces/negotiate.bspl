@@ -1,0 +1,13 @@
+Negotiate {
+  roles B, S
+  parameters out buyID key, out itemID key, out item, out money, out price, out outcome
+
+  B -> S: Rfq[ out buyID key, out itemID key]
+  S -> B: Quote[ in buyID key, in itemID key, out price]
+
+
+  B -> S: Reject[ in buyID key, in itemID key, out outcome ]
+  B -> S: Pay[ in buyID key, in itemID key, out money ]
+
+  S -> B: Give[ in buyID key, in itemID key, in money, out item]
+}
