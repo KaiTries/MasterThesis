@@ -61,6 +61,6 @@ async def getItem(msg):
 if __name__ == "__main__":
     logger.info("Starting Buyer...")
     coin = random.choice([True, False])
-
+    coin= False
     logger.info(f"Going to the {'bazaar' if coin else 'supermarket'} to buy groceries")
     adapter.start(order_generator(coin))

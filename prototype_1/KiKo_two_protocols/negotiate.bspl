@@ -7,7 +7,7 @@ Negotiate {
 
 
   B -> S: Reject[ in buyID key, in itemID key, out outcome ]
-  B -> S: Accept[ in buyID key, in itemID key, in money ]
+  B -> S: Accept[ in buyID key, in itemID key, out money ]
 
-  S -> B: HandOver[ in buyID key, in itemID key, out outcome, out item]
+  S -> B: HandOver[ in buyID key, in itemID key, in money, out item]
 }
