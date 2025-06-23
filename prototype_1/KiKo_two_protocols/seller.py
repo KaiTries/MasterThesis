@@ -8,7 +8,7 @@ import asyncio
 from bspl.adapter import Adapter
 from configuration import systems, agents
 import Buy
-from Negotiate import Rfq, Quote, Reject, Accept, HandOver
+from Negotiate import Rfq, Quote, Reject, Accept, Give
 
 adapter = Adapter("Seller", systems, agents)
 
@@ -45,7 +45,7 @@ async def givePrice(msg):
 async def giveItem(msg):
     logger.info(f"Selling {msg['itemID']} for {msg['money']}")
     await adapter.send(
-        HandOver(
+        Give(
             item=msg['itemID'],
             buyID=msg['buyID'],
             itemID=msg['itemID']

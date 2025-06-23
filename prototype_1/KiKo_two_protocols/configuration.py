@@ -25,14 +25,14 @@ agents = {
 }
 
 systems = {
-    "buy": {
+    "Buy": {
         "protocol": buy,
         "roles": {
             Buyer: "Buyer",
             Seller: "Seller"
         }
     },
-    "negotiate": {
+    "Negotiate": {
         "protocol": negotiate,
         "roles": {
             B: "Buyer",
