@@ -1,0 +1,4 @@
+@prefix customAgent: <http://www.metadataAgent.com/>.
+
+<> a customAgent:CustomAgent.
+<#artifact> customAgent:does customAgent:SomethingVeryCool.

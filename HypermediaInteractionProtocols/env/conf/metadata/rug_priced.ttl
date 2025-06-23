@@ -1,0 +1,29 @@
+@base <http://localhost:8080/> .
+@prefix websub: <https://purl.org/hmas/websub/> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix js: <https://www.w3.org/2019/wot/json-schema#> .
+@prefix hmas: <https://purl.org/hmas/> .
+@prefix wotsec: <https://www.w3.org/2019/wot/security#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix jacamo: <https://purl.org/hmas/jacamo/> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+
+<workspaces/supermarket/artifacts/rug#artifact> a td:Thing, hmas:Artifact;
+  td:title "rug";
+  td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
+    ];
+  td:hasProperties [
+      a td:PropertyAffordance;
+      td:name "price";
+      td:hasForm [
+          htv:methodName "GET";
+          hctl:hasTarget <workspaces/supermarket/artifacts/rug#artifact/price>;
+          hctl:forContentType "application/json";
+          hctl:hasOperationType td:readProperty
+        ];
+      td:hasOutputSchema [ a js:NumberSchema ]
+    ].
+
+<workspaces/supermarket/artifacts/rug> a hmas:ResourceProfile;
+  hmas:isProfileOf <workspaces/supermarket/artifacts/rug#artifact> .
+

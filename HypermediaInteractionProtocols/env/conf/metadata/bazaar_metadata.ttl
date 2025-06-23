@@ -1,0 +1,13 @@
+@prefix td: <https://www.w3.org/2019/wot/td#>.
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+
+<#workspace> td:hasActionAffordance [ a td:ActionAffordance;
+    td:name "getProtocol";
+    td:hasForm [
+        htv:methodName "GET";
+        hctl:hasTarget <http://localhost:8005/protocol>;
+        hctl:forContentType "text/plain";
+        hctl:hasOperationType td:invokeAction;
+    ]
+].
