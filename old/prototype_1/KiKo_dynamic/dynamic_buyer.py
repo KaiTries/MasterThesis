@@ -9,7 +9,7 @@ import asyncio
 from bspl.adapter import Adapter
 
 adapter = None
-me = ('127.0.0.1', 8005)
+me = ('127.0.0.1', 8001)
 logger = logging.getLogger("buyer")
 
 # find parts of configuration dynamically
@@ -22,7 +22,7 @@ def learnProtocol():
 
 def find_other_agents():
     agents = {
-        "Seller": [("127.0.0.1", 8004)],
+        "Seller": [("127.0.0.1", 8010)],
     }
 
     return agents

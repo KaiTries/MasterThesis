@@ -3,68 +3,57 @@ import requests
 import bspl
 from rdflib import Graph, Namespace, Literal
 import time
+from helpers import getProtocol, getAgentsIn
 
 # Must buy groceries
 # Will go into the bazaar and initiate the protocol to buy something
-WEB_ID = 'http://localhost:8001'
+WEB_ID = 'http://localhost:8011'
 AgentName = 'buyer'
 BAZAAR_URI = 'http://localhost:8080/workspaces/bazaar/'
-TD = Namespace('https://www.w3.org/2019/wot/td#')   
-HTV = Namespace("http://www.w3.org/2011/http#")
-HCTL = Namespace("https://www.w3.org/2019/wot/hypermedia#")
+
+BODY_METADATA = """
+@prefix td: <https://www.w3.org/2019/wot/td#>.
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+
+<workspaces/bazaar/artifacts/body_buyer#artifact> td:hasActionAffordance [ a td:ActionAffordance;
+    td:name "kikoAdapter";
+    td:hasForm [
+        htv:methodName "GET";
+        hctl:hasTarget <http://127.0.0.1:8011/>;
+        hctl:forContentType "text/plain";
+        hctl:hasOperationType td:invokeAction;
+    ]
+].
+"""
 
 def postWorkspace(workspace_uri):
     headers = {
         'X-Agent-WebID': WEB_ID,
-        'X-Agent-LocalName': AgentName
+        'X-Agent-LocalName': AgentName,
+        'Content-Type': 'text/turtle'
     }
 
-    response = requests.post(workspace_uri,headers=headers)
+    response = requests.post(workspace_uri,headers=headers,data=BODY_METADATA)
     return response.status_code
 
+def updateBody(body_uri):
+    old_representation = requests.get(body_uri).text
 
-
-def getAction(model: Graph, affordanceName: str):
-    for action in model.subjects(RDF.type, TD.ActionAffordance):
-        name = model.value(action, TD.name)
-        if name == Literal(affordanceName):
-            print("found action", action)
-            return action
-
-def getForm(model: Graph, target_action: Graph):
-    return model.value(subject=target_action, predicate=TD.hasForm)
-
-def createRequest(model: Graph, form: Graph):
-    http_method = model.value(form, HTV.methodName)
-    target_url = model.value(form, HCTL.hasTarget)
-    content_type = model.value(form, HCTL.forContentType)
-
-    return {
-        "method": str(http_method),
-        "url": str(target_url),
-        "headers": {"Accept": str(content_type)} if content_type else {},
+    headers = {
+        'X-Agent-WebID': WEB_ID,
+        'X-Agent-LocalName': AgentName,
+        'Content-Type': 'text/turtle'
     }
 
-def getProtocol(workspace):
-    response = requests.get(workspace)
-    workspace = Graph().parse(data=response.text,format='turtle')
-    action = getAction(workspace, 'getProtocol')
-    form = getForm(workspace, action)
-    params = createRequest(workspace, form)
-    response = requests.request(**params)
-    protocol = bspl.load(response.text)
-    print(protocol)
-
-
-
-
-
-
+    response = requests.put(body_uri,headers=headers,data=old_representation + BODY_METADATA)
+    return response.status_code
 
 if __name__ == '__main__':
     success = postWorkspace(BAZAAR_URI + 'join') 
-
-    getProtocol(BAZAAR_URI)
+    success = updateBody(BAZAAR_URI + 'artifacts/body_buyer')
+    protocol = getProtocol(BAZAAR_URI)
+    agents = getAgentsIn(BAZAAR_URI)
     time.sleep(5)
 
     success = postWorkspace(BAZAAR_URI + 'leave')

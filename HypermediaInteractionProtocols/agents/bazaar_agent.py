@@ -4,7 +4,7 @@ from rdflib.namespace import RDF
 import bspl
 from bspl.adapter import Adapter
 import requests
-import threading
+from helpers import getProtocol
 # Should go into the bazaar and wait there
 # Should be subscribed to the bazaar workspace 
 # Must maintain his systems and agents table for kiko
@@ -12,25 +12,15 @@ import threading
 JACAMO_BODY = 'https://purl.org/hmas/jacamo/Body'
 HMAS_AGENT = 'https://purl.org/hmas/Agent'
 
-buy = bspl.load_file("buy.bspl").export("Buy")
-from Buy import Buyer, Seller
+BAZAAR = 'http://localhost:8080/workspaces/bazaar'
 
-
-agents = {
-    "Seller" : [('localhost', 8081)]
-}
-systems = {
-    "Buy": {
-        "protocol": buy,
-        "roles": {
-            Buyer: "Buyer",
-            Seller: "Seller"
-        }
-    }
-}
-
+ME = [('127.0.0.1',8010)]
+MY_ROLES = ['Seller']
 
 agents_in_bazaar = {}
+agents = {}
+
+
 
 app = Flask(__name__)
 
@@ -60,8 +50,8 @@ def callback():
         else:
             print(f'skipping agent {agent}')
 
-
     print(agents_in_bazaar)
+    updateAgents(ME, MY_ROLES)
     return "OK", 200
 
 
@@ -74,10 +64,8 @@ def addAgent(agent_body_url):
 
     for subj in agent_body.subjects(RDF.type, URIRef(HMAS_AGENT)):
         split_uri = str(subj).removeprefix('http://').split(':')
-        agents_in_bazaar[agent_body_url] = (split_uri[0], split_uri[1])
+        agents_in_bazaar[agent_body_url] = (split_uri[0], int(split_uri[1]))
 
-        agents['Buyer'] = (split_uri[0], int(split_uri[1]))
-    
 
 
 
@@ -102,16 +90,55 @@ def joinBazaar():
     return True
 
 
-def runKiko():
-    adapter = Adapter("Seller", systems=systems, agents=agents)
+def setSystems(protocol):
+    return {
+        protocol.name : {
+            "protocol": protocol,
+            "roles" : {}
+        }
+    }
+
+
+def updateAgents(me, my_roles):
+    agents.clear()
+    for role in my_roles:
+        agents[role] = me
+
+    for agent in agents_in_bazaar:
+        agents['Buyer'] = agents_in_bazaar[agent]
+    print(agents)
+    
+def updateRoles(protocol, systems):
+    for role in protocol.roles:
+        systems[protocol.name]["roles"][protocol.roles[role]] = role
+
+
+
+
+
+def addReactors(adapter, protocol):
+    async def give(msg):
+        print(f"Received buy oder for {msg['buyID']} for a {msg['itemID']}")
+        await adapter.send(protocol.module.Give(
+            item=msg['itemID'],
+            **msg.payload
+        ))
+    adapter.reaction(protocol.module.Pay)(give)
+
+
 
 if __name__ == '__main__':
     success = joinBazaar()
-    if not success:
-        exit(1)
     success = setupWebsubCallback()
+    protocol = getProtocol(BAZAAR).export('Buy')
+    systems = setSystems(protocol=protocol)
+    updateAgents(ME, MY_ROLES)
+    updateRoles(protocol,systems)
+    print(systems)
+    print(agents)
+    adapter = Adapter('Seller',systems=systems, agents=agents)
+    addReactors(adapter, protocol)
 
     if success == 200:
         app.run(host='localhost', port=8082)
-        adapter = Adapter("Seller", systems=systems, agents=agents)
-
+        adapter.start()
