@@ -1,0 +1,39 @@
+@prefix ex:     <https://ex.co/market#> .
+@prefix schema: <http://schema.org/> .
+@prefix bspl:   <https://purl.org/bspl#> .
+@prefix hydra:  <http://www.w3.org/ns/hydra/core#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+ex:Buy       a bspl:Protocol ;
+    rdfs:label "Buy protocol" ;
+
+    # ------- roles ------- 
+    bspl:role  [ rdfs:label "Buyer"  ; a bspl:Role ],
+               [ rdfs:label "Seller" ; a bspl:Role ] ;
+
+    # ------- parameters -------
+    bspl:parameter
+        [ a bspl:OutKey ;  rdfs:label "buyID"  ; sh:datatype xsd:string ],
+        [ a bspl:OutKey ;  rdfs:label "itemID" ; sh:datatype xsd:string ],
+        [ a bspl:Out    ;  rdfs:label "item"   ; sh:class    schema:Product ],
+        [ a bspl:Out    ;  rdfs:label "money"  ; sh:class    schema:MonetaryAmount ] ;
+
+    # ------- hypermedia affordances (one per BSPL message) -------
+    hydra:operation  ex:pay , ex:give .
+
+# ---- “Pay” message exposed as an operation ----
+ex:pay  a hydra:Operation ;
+    hydra:method  "POST" ;
+    hydra:title   "Pay" ;
+    hydra:expects  ex:PayShape ;       # in/out bag for the request
+    hydra:returns  ex:Empty ;          # nothing new comes back
+    hydra:property ex:Buy .            # links back to the protocol
+
+# ---- “Give” message exposed as an operation ----
+ex:give  a hydra:Operation ;
+    hydra:method  "POST" ;
+    hydra:title   "Give" ;
+    hydra:expects  ex:GiveShapeIn ;    # expects keys + money
+    hydra:returns  ex:GiveShapeOut ;   # returns the item
+    hydra:property ex:Buy .

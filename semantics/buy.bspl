@@ -1,0 +1,22 @@
+# --------------- prefix declarations -------------------
+namespace ex     = https://ex.co/market#
+namespace schema = http://schema.org/
+namespace bspl   = https://purl.org/bspl#
+namespace rdfs   = http://www.w3.org/2000/01/rdf-schema#
+namespace xsd    = http://www.w3.org/2001/XMLSchema#
+
+# --------------- protocol ------------------------------
+protocol Buy : bspl:Protocol
+  roles
+    Buyer  : rdfs:Agent
+    Seller : rdfs:Agent
+
+  parameters
+    out key buyID  : xsd:string
+    out key itemID : xsd:string
+    out      item  : schema:Product
+    out      money : schema:MonetaryAmount
+
+  messages
+    Pay  Buyer  -> Seller [ out buyID key, out itemID key, out money ]
+    Give Seller -> Buyer  [ in  buyID key, in  itemID key, in money, out item ]
