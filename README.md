@@ -1,12 +1,23 @@
 # Repo for my Masterthesis on interaction protocols in hypermedia environments
 
+## Scenario
+
+Some user agent wants to buy a rug from some store. There exist two stores; the bazaar and the supermarket.
+A storeclerk agent exists in both stores. The rug can be bought from either store, but the interaction is slightly different.
+In the bazaar the interaction entails some negotiation about the price, whereas in the store it is fixed.
+
+**Goal**
+
+The user agent should be able to buy the rug from either store. He must achieve this without prior knowledge of the _environment_.
+Meaning the _protocols_, _agents_ and other _artifacts_ are not known at compile time and must be discovered at runtime.
+
 ## Main questions to answer
 
 ### BSPL protocol extensions
 
 - [ ] BSPL Ontology so that it can be used in knowledge graphs
 - [ ] Possible semantic extensions to allow linking -> a GoodRelations:Offer might want to say bspl:usesProtocol
-- [ ]
+- [ ] Translator that does BSPL <-> RDF
 
 ### Agent
 
