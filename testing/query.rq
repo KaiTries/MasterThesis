@@ -1,0 +1,15 @@
+PREFIX gr:     <http://purl.org/goodrelations/v1#>
+PREFIX schema: <http://schema.org/>
+PREFIX bspl:   <https://purl.org/bspl#>
+
+SELECT ?offer ?price ?currency ?protocol ?endpoint
+WHERE {
+  ?offer a gr:Offering ;
+         gr:hasPriceSpecification [
+           gr:hasCurrencyValue ?price ;
+           gr:hasCurrency ?currency
+         ] ;
+         schema:potentialAction ?act .
+  ?act bspl:usesProtocol ?protocol ;
+       schema:target/schema:urlTemplate ?endpoint .
+}

@@ -1,0 +1,61 @@
+@prefix ex:   <http://example.com/> .
+@prefix bspl: <https://purl.org/bspl/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+# Roles
+ex:Buyer  a bspl:Role .
+ex:Seller a bspl:Role .
+
+# Parameters
+ex:buyID  a bspl:KeyParameter .
+ex:itemID a bspl:KeyParameter .
+ex:item   a bspl:Parameter .
+ex:money  a bspl:Parameter .
+
+# Protocol
+ex:Buy a bspl:Protocol ;
+  bspl:hasRole ex:Buyer, ex:Seller ;
+  bspl:hasMessage ex:Pay, ex:Give ;
+  bspl:hasParameter ex:buyID, ex:itemID, ex:item, ex:money ;
+  bspl:hasKeyParameter ex:buyID, ex:itemID .
+
+# Messages
+ex:Pay a bspl:MessageType ;
+  bspl:fromRole ex:Buyer ; bspl:toRole ex:Seller ;
+  bspl:hasMessageParam
+      [ a bspl:MessageParam ; bspl:parameter ex:buyID  ; bspl:direction bspl:out ] ,
+      [ a bspl:MessageParam ; bspl:parameter ex:itemID ; bspl:direction bspl:out ] ,
+      [ a bspl:MessageParam ; bspl:parameter ex:money  ; bspl:direction bspl:out ] .
+
+ex:Give a bspl:MessageType ;
+  bspl:fromRole ex:Seller ; bspl:toRole ex:Buyer ;
+  bspl:hasMessageParam
+      [ a bspl:MessageParam ; bspl:parameter ex:buyID  ; bspl:direction bspl:in  ] ,
+      [ a bspl:MessageParam ; bspl:parameter ex:itemID ; bspl:direction bspl:in  ] ,
+      [ a bspl:MessageParam ; bspl:parameter ex:money  ; bspl:direction bspl:in  ] ,
+      [ a bspl:MessageParam ; bspl:parameter ex:item   ; bspl:direction bspl:out ] .
+
+# ------------------------------------------------------------------------------------
+# One concrete conversation (execution) -> If we model instances
+ex:conv-1 a bspl:Conversation ;
+  bspl:realizes ex:Buy .
+
+ex:pay-1 a bspl:MessageInstance ;
+  bspl:instanceOf ex:Pay ;
+  bspl:inConversation ex:conv-1 ;
+  bspl:hasBinding
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:buyID  ; bspl:value "B-001" ] ,
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:itemID ; bspl:value "I-777" ] ,
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:money  ; bspl:value "200.00"^^xsd:decimal ] ;
+  prov:generatedAtTime "2025-07-24T12:01:00Z"^^xsd:dateTime .
+
+ex:give-1 a bspl:MessageInstance ;
+  bspl:instanceOf ex:Give ;
+  bspl:inConversation ex:conv-1 ;
+  bspl:hasBinding
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:buyID  ; bspl:value "B-001" ] ,
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:itemID ; bspl:value "I-777" ] ,
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:money  ; bspl:value "200.00"^^xsd:decimal ] ,
+    [ a bspl:ParameterBinding ; bspl:forParameter ex:item   ; bspl:value "http://example.com/rug/42" ] ;
+  prov:generatedAtTime "2025-07-24T12:02:00Z"^^xsd:dateTime .

@@ -1,0 +1,148 @@
+@prefix bspl:  <https://purl.org/bspl/core#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix dct:   <http://purl.org/dc/terms/> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# Ontology header
+#################################################################
+<https://purl.org/bspl/core>
+  a owl:Ontology ;
+  dct:title "BSPL Core Ontology" ;
+  owl:versionIRI <https://purl.org/bspl/core/0.1> ;
+  dct:license <https://creativecommons.org/publicdomain/zero/1.0/> .
+
+#################################################################
+# Core classes (specification level)
+#################################################################
+
+bspl:Protocol a owl:Class ;
+  rdfs:label "Protocol" ;
+  rdfs:comment "A BSPL protocol specification." .
+
+bspl:Role a owl:Class ;
+  rdfs:label "Role" .
+
+bspl:MessageType a owl:Class ;
+  rdfs:label "Message type" ;
+  rdfs:comment "A message schema declared by a BSPL protocol." .
+
+bspl:Parameter a owl:Class ;
+  rdfs:label "Parameter" .
+
+bspl:KeyParameter a owl:Class ;
+  rdfs:subClassOf bspl:Parameter ;
+  rdfs:label "Key parameter" .
+
+# Reified parameter binding to capture direction (in/out) per message
+bspl:MessageParam a owl:Class ;
+  rdfs:label "Message parameter binding" ;
+  rdfs:comment "Connects a MessageType with a Parameter and its direction." .
+
+#################################################################
+# Execution level
+#################################################################
+
+bspl:Conversation a owl:Class ;
+  rdfs:label "Conversation" ;
+  rdfs:comment "A concrete execution of a BSPL protocol identified by its key parameters." .
+
+bspl:MessageInstance a owl:Class ;
+  rdfs:label "Message instance" ;
+  rdfs:subClassOf prov:Entity .
+
+bspl:ParameterBinding a owl:Class ;
+  rdfs:label "Parameter binding" ;
+  rdfs:comment "One concrete value for a parameter in a message instance." .
+
+#################################################################
+# Individuals for directions
+#################################################################
+
+bspl:Direction a owl:Class ;
+  rdfs:label "Direction" .
+
+bspl:in  a bspl:Direction ;  rdfs:label "in" .
+bspl:out a bspl:Direction ;  rdfs:label "out" .
+
+#################################################################
+# Object/Data properties
+#################################################################
+
+# --- spec level relations ---
+bspl:hasRole a owl:ObjectProperty ;
+  rdfs:domain bspl:Protocol ;
+  rdfs:range  bspl:Role .
+
+bspl:hasParameter a owl:ObjectProperty ;
+  rdfs:domain bspl:Protocol ;
+  rdfs:range bspl:Parameter ;
+  rdfs:comment "Parameters used in the protocol" .
+
+bspl:hasKeyParameter a owl:ObjectProperty ;
+  rdfs:subPropertyOf bspl:hasParameter ;
+  rdfs:domain bspl:Protocol ;
+  rdfs:range  bspl:KeyParameter ;
+  rdfs:comment "Key parameters of the protocol." .
+
+bspl:hasMessage a owl:ObjectProperty ;
+  rdfs:domain bspl:Protocol ;
+  rdfs:range  bspl:MessageType .
+
+bspl:fromRole a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageType ;
+  rdfs:range  bspl:Role .
+
+bspl:toRole a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageType ;
+  rdfs:range  bspl:Role .
+
+# MessageType -> MessageParam (reified parameter binding)
+bspl:hasMessageParam a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageType ;
+  rdfs:range  bspl:MessageParam .
+
+bspl:parameter a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageParam ;
+  rdfs:range  bspl:Parameter .
+
+bspl:direction a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageParam ;
+  rdfs:range  bspl:Direction .
+
+bspl:isKey a owl:DatatypeProperty ;
+  rdfs:domain bspl:Parameter ;
+  rdfs:range xsd:boolean ;
+  rdfs:comment "Convenience flag; alternatively use KeyParameter subclass." .
+
+# --- execution level relations ---
+bspl:realizes a owl:ObjectProperty ;
+  rdfs:domain bspl:Conversation ;
+  rdfs:range  bspl:Protocol .
+
+bspl:inConversation a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageInstance ;
+  rdfs:range  bspl:Conversation .
+
+bspl:instanceOf a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageInstance ;
+  rdfs:range  bspl:MessageType .
+
+bspl:hasBinding a owl:ObjectProperty ;
+  rdfs:domain bspl:MessageInstance ;
+  rdfs:range  bspl:ParameterBinding .
+
+bspl:forParameter a owl:ObjectProperty ;
+  rdfs:domain bspl:ParameterBinding ;
+  rdfs:range  bspl:Parameter .
+
+bspl:value a owl:DatatypeProperty ;
+  rdfs:domain bspl:ParameterBinding .
+
+# --- bridge ---
+bspl:usesProtocol a owl:ObjectProperty ;
+  rdfs:range bspl:Protocol ;
+  rdfs:comment "Attach this to offers/actions/endpoints to indicate they enact this protocol." .

@@ -1,0 +1,146 @@
+digraph { 
+ node [ fontname="DejaVu Sans" ] ; 
+	node0 -> node1 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node2 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node4 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node6 -> node7 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node8 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node8 -> node9 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node10 -> node9 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node11 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node13 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node14 -> node15 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node10 -> node16 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node17 -> node11 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node18 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node14 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node22 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node17 -> node19 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node23 -> node24 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node25 -> node15 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node26 -> node19 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node27 -> node1 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node26 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node2 -> node28 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node29 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node27 -> node9 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node30 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node31 -> node32 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node30 -> node9 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:subClassOf</font> > ] ;
+	node33 -> node28 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node1 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node18 -> node30 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node31 -> node34 [ color=BLACK, label=< <font point-size='10' color='#336633'>dct:license</font> > ] ;
+	node14 -> node24 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node25 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node19 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node26 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node9 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node24 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node10 -> node7 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node22 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node27 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node21 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node5 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node33 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node23 -> node15 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node6 -> node28 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node29 -> node15 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node31 -> node36 [ color=BLACK, label=< <font point-size='10' color='#336633'>owl:versionIRI</font> > ] ;
+	node17 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node4 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node2 -> node11 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node25 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node20 -> node21 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node8 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node23 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node35 -> node21 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node22 -> node24 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node15 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node13 -> node11 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node28 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node0 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node18 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:domain</font> > ] ;
+	node11 -> node37 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:subClassOf</font> > ] ;
+	node33 -> node9 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node29 -> node1 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node0 -> node21 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+	node18 -> node8 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:subPropertyOf</font> > ] ;
+	node13 -> node15 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdfs:range</font> > ] ;
+# https://purl.org/bspl/core#direction node0
+node0 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>direction</B></td></tr><tr><td href='https://purl.org/bspl/core#direction' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#direction</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#MessageParam node1
+node1 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Message parameter binding</B></td></tr><tr><td href='https://purl.org/bspl/core#MessageParam' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#MessageParam</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;Connects a MessageType with a Parameter and its direction.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#hasBinding node2
+node2 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>hasBinding</B></td></tr><tr><td href='https://purl.org/bspl/core#hasBinding' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#hasBinding</font></td></tr></table> > ] 
+# http://www.w3.org/2002/07/owl#ObjectProperty node3
+node3 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>ObjectProperty</B></td></tr><tr><td href='http://www.w3.org/2002/07/owl#ObjectProperty' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/2002/07/owl#ObjectProperty</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#usesProtocol node4
+node4 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>usesProtocol</B></td></tr><tr><td href='https://purl.org/bspl/core#usesProtocol' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#usesProtocol</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;Attach this to offers/actions/endpoints to indicate they enact this protocol.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#Protocol node5
+node5 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Protocol</B></td></tr><tr><td href='https://purl.org/bspl/core#Protocol' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#Protocol</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;A BSPL protocol specification.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#value node6
+node6 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>value</B></td></tr><tr><td href='https://purl.org/bspl/core#value' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#value</font></td></tr></table> > ] 
+# http://www.w3.org/2002/07/owl#DatatypeProperty node7
+node7 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>DatatypeProperty</B></td></tr><tr><td href='http://www.w3.org/2002/07/owl#DatatypeProperty' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/2002/07/owl#DatatypeProperty</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#hasParameter node8
+node8 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>hasParameter</B></td></tr><tr><td href='https://purl.org/bspl/core#hasParameter' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#hasParameter</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;Parameters used in the protocol&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#Parameter node9
+node9 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Parameter</B></td></tr><tr><td href='https://purl.org/bspl/core#Parameter' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#Parameter</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#isKey node10
+node10 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>isKey</B></td></tr><tr><td href='https://purl.org/bspl/core#isKey' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#isKey</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;Convenience flag; alternatively use KeyParameter subclass.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#MessageInstance node11
+node11 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Message instance</B></td></tr><tr><td href='https://purl.org/bspl/core#MessageInstance' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#MessageInstance</font></td></tr></table> > ] 
+# http://www.w3.org/2002/07/owl#Class node12
+node12 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Class</B></td></tr><tr><td href='http://www.w3.org/2002/07/owl#Class' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/2002/07/owl#Class</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#instanceOf node13
+node13 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>instanceOf</B></td></tr><tr><td href='https://purl.org/bspl/core#instanceOf' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#instanceOf</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#fromRole node14
+node14 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>fromRole</B></td></tr><tr><td href='https://purl.org/bspl/core#fromRole' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#fromRole</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#MessageType node15
+node15 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Message type</B></td></tr><tr><td href='https://purl.org/bspl/core#MessageType' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#MessageType</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;A message schema declared by a BSPL protocol.&quot;</td></tr></table> > ] 
+# http://www.w3.org/2001/XMLSchema#boolean node16
+node16 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>boolean</B></td></tr><tr><td href='http://www.w3.org/2001/XMLSchema#boolean' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/2001/XMLSchema#boolean</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#inConversation node17
+node17 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>inConversation</B></td></tr><tr><td href='https://purl.org/bspl/core#inConversation' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#inConversation</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#hasKeyParameter node18
+node18 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>hasKeyParameter</B></td></tr><tr><td href='https://purl.org/bspl/core#hasKeyParameter' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#hasKeyParameter</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;Key parameters of the protocol.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#Conversation node19
+node19 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Conversation</B></td></tr><tr><td href='https://purl.org/bspl/core#Conversation' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#Conversation</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;A concrete execution of a BSPL protocol identified by its key parameters.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#out node20
+node20 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>out</B></td></tr><tr><td href='https://purl.org/bspl/core#out' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#out</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#Direction node21
+node21 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Direction</B></td></tr><tr><td href='https://purl.org/bspl/core#Direction' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#Direction</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#hasRole node22
+node22 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>hasRole</B></td></tr><tr><td href='https://purl.org/bspl/core#hasRole' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#hasRole</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#toRole node23
+node23 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>toRole</B></td></tr><tr><td href='https://purl.org/bspl/core#toRole' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#toRole</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#Role node24
+node24 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Role</B></td></tr><tr><td href='https://purl.org/bspl/core#Role' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#Role</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#hasMessage node25
+node25 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>hasMessage</B></td></tr><tr><td href='https://purl.org/bspl/core#hasMessage' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#hasMessage</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#realizes node26
+node26 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>realizes</B></td></tr><tr><td href='https://purl.org/bspl/core#realizes' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#realizes</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#parameter node27
+node27 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>parameter</B></td></tr><tr><td href='https://purl.org/bspl/core#parameter' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#parameter</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#ParameterBinding node28
+node28 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Parameter binding</B></td></tr><tr><td href='https://purl.org/bspl/core#ParameterBinding' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#ParameterBinding</font></td></tr><tr><td align='left'>rdfs:comment</td><td align='left'>&quot;One concrete value for a parameter in a message instance.&quot;</td></tr></table> > ] 
+# https://purl.org/bspl/core#hasMessageParam node29
+node29 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>hasMessageParam</B></td></tr><tr><td href='https://purl.org/bspl/core#hasMessageParam' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#hasMessageParam</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#KeyParameter node30
+node30 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Key parameter</B></td></tr><tr><td href='https://purl.org/bspl/core#KeyParameter' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#KeyParameter</font></td></tr></table> > ] 
+# https://purl.org/bspl/core node31
+node31 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>core</B></td></tr><tr><td href='https://purl.org/bspl/core' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core</font></td></tr><tr><td align='left'>dct:title</td><td align='left'>&quot;BSPL Core Ontology&quot;</td></tr></table> > ] 
+# http://www.w3.org/2002/07/owl#Ontology node32
+node32 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Ontology</B></td></tr><tr><td href='http://www.w3.org/2002/07/owl#Ontology' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/2002/07/owl#Ontology</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#forParameter node33
+node33 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>forParameter</B></td></tr><tr><td href='https://purl.org/bspl/core#forParameter' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#forParameter</font></td></tr></table> > ] 
+# https://creativecommons.org/publicdomain/zero/1.0/ node34
+node34 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>https://creativecommons.org/publicdomain/zero/1.0/</B></td></tr><tr><td href='https://creativecommons.org/publicdomain/zero/1.0/' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://creativecommons.org/publicdomain/zero/1.0/</font></td></tr></table> > ] 
+# https://purl.org/bspl/core#in node35
+node35 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>in</B></td></tr><tr><td href='https://purl.org/bspl/core#in' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core#in</font></td></tr></table> > ] 
+# https://purl.org/bspl/core/0.1 node36
+node36 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>0.1</B></td></tr><tr><td href='https://purl.org/bspl/core/0.1' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://purl.org/bspl/core/0.1</font></td></tr></table> > ] 
+# http://www.w3.org/ns/prov#Entity node37
+node37 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Entity</B></td></tr><tr><td href='http://www.w3.org/ns/prov#Entity' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/ns/prov#Entity</font></td></tr></table> > ] 
+}

@@ -1,0 +1,238 @@
+{
+  "graphs" : [ {
+    "id" : "https://purl.org/bspl/core",
+    "meta" : {
+      "basicPropertyValues" : [ {
+        "pred" : "http://purl.org/dc/terms/license",
+        "val" : "https://creativecommons.org/publicdomain/zero/1.0/"
+      }, {
+        "pred" : "http://purl.org/dc/terms/title",
+        "val" : "BSPL Core Ontology"
+      } ],
+      "version" : "https://purl.org/bspl/core/0.1"
+    },
+    "nodes" : [ {
+      "id" : "https://purl.org/bspl/core#Conversation",
+      "lbl" : "Conversation",
+      "type" : "CLASS",
+      "meta" : {
+        "comments" : [ "A concrete execution of a BSPL protocol identified by its key parameters." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#Direction",
+      "lbl" : "Direction",
+      "type" : "CLASS"
+    }, {
+      "id" : "https://purl.org/bspl/core#KeyParameter",
+      "lbl" : "Key parameter",
+      "type" : "CLASS"
+    }, {
+      "id" : "https://purl.org/bspl/core#MessageInstance",
+      "lbl" : "Message instance",
+      "type" : "CLASS"
+    }, {
+      "id" : "https://purl.org/bspl/core#MessageParam",
+      "lbl" : "Message parameter binding",
+      "type" : "CLASS",
+      "meta" : {
+        "comments" : [ "Connects a MessageType with a Parameter and its direction." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#MessageType",
+      "lbl" : "Message type",
+      "type" : "CLASS",
+      "meta" : {
+        "comments" : [ "A message schema declared by a BSPL protocol." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#Parameter",
+      "lbl" : "Parameter",
+      "type" : "CLASS"
+    }, {
+      "id" : "https://purl.org/bspl/core#ParameterBinding",
+      "lbl" : "Parameter binding",
+      "type" : "CLASS",
+      "meta" : {
+        "comments" : [ "One concrete value for a parameter in a message instance." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#Protocol",
+      "lbl" : "Protocol",
+      "type" : "CLASS",
+      "meta" : {
+        "comments" : [ "A BSPL protocol specification." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#Role",
+      "lbl" : "Role",
+      "type" : "CLASS"
+    }, {
+      "id" : "https://purl.org/bspl/core#direction",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#forParameter",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#fromRole",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#hasBinding",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#hasKeyParameter",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "comments" : [ "Key parameters of the protocol." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#hasMessage",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#hasMessageParam",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#hasParameter",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "comments" : [ "Parameters used in the protocol" ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#hasRole",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#inConversation",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#instanceOf",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#parameter",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#realizes",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#toRole",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "https://purl.org/bspl/core#usesProtocol",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "comments" : [ "Attach this to offers/actions/endpoints to indicate they enact this protocol." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#isKey",
+      "type" : "PROPERTY",
+      "propertyType" : "DATA",
+      "meta" : {
+        "comments" : [ "Convenience flag; alternatively use KeyParameter subclass." ]
+      }
+    }, {
+      "id" : "https://purl.org/bspl/core#value",
+      "type" : "PROPERTY",
+      "propertyType" : "DATA"
+    }, {
+      "id" : "https://purl.org/bspl/core#in",
+      "lbl" : "in"
+    }, {
+      "id" : "https://purl.org/bspl/core#out",
+      "lbl" : "out"
+    } ],
+    "edges" : [ {
+      "sub" : "https://purl.org/bspl/core#KeyParameter",
+      "pred" : "is_a",
+      "obj" : "https://purl.org/bspl/core#Parameter"
+    }, {
+      "sub" : "https://purl.org/bspl/core#MessageInstance",
+      "pred" : "is_a",
+      "obj" : "http://www.w3.org/ns/prov#Entity"
+    }, {
+      "sub" : "https://purl.org/bspl/core#in",
+      "pred" : "type",
+      "obj" : "https://purl.org/bspl/core#Direction"
+    }, {
+      "sub" : "https://purl.org/bspl/core#out",
+      "pred" : "type",
+      "obj" : "https://purl.org/bspl/core#Direction"
+    }, {
+      "sub" : "https://purl.org/bspl/core#hasKeyParameter",
+      "pred" : "subPropertyOf",
+      "obj" : "https://purl.org/bspl/core#hasParameter"
+    } ],
+    "domainRangeAxioms" : [ {
+      "predicateId" : "https://purl.org/bspl/core#direction",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageParam" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Direction" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#forParameter",
+      "domainClassIds" : [ "https://purl.org/bspl/core#ParameterBinding" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Parameter" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#fromRole",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageType" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Role" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#hasBinding",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageInstance" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#ParameterBinding" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#hasKeyParameter",
+      "domainClassIds" : [ "https://purl.org/bspl/core#Protocol" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#KeyParameter" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#hasMessage",
+      "domainClassIds" : [ "https://purl.org/bspl/core#Protocol" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#MessageType" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#hasMessageParam",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageType" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#MessageParam" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#hasParameter",
+      "domainClassIds" : [ "https://purl.org/bspl/core#Protocol" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Parameter" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#hasRole",
+      "domainClassIds" : [ "https://purl.org/bspl/core#Protocol" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Role" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#inConversation",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageInstance" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Conversation" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#instanceOf",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageInstance" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#MessageType" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#parameter",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageParam" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Parameter" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#realizes",
+      "domainClassIds" : [ "https://purl.org/bspl/core#Conversation" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Protocol" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#toRole",
+      "domainClassIds" : [ "https://purl.org/bspl/core#MessageType" ],
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Role" ]
+    }, {
+      "predicateId" : "https://purl.org/bspl/core#usesProtocol",
+      "rangeClassIds" : [ "https://purl.org/bspl/core#Protocol" ]
+    } ]
+  } ]
+}
