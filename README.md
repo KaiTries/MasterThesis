@@ -4,16 +4,15 @@
 
 ### BSPL protocol extensions
 
-[ ] BSPL Ontology so that it can be used in knowledge graphs
-[ ] Possible semantic extensions to allow linking -> a GoodRelations:Offer might want to say bspl:usesProtocol
-[ ]
+- [ ] BSPL Ontology so that it can be used in knowledge graphs
+- [ ] Possible semantic extensions to allow linking -> a GoodRelations:Offer might want to say bspl:usesProtocol
+- [ ]
 
 ### Agent
 
-[ ] Allow agents to find new protocols -> enable hypermedia controls
-
-[ ] Agents need to know what roles other agents are capable off -> agent representation
+- [ ] Allow agents to find new protocols -> enable hypermedia controls
+- [ ] Agents need to know what roles other agents are capable off -> agent representation
 
 ### Environment
 
-[X] need Hypermedia environment where agents can live -> Yggdrasil
+- [x] need Hypermedia environment where agents can live -> Yggdrasil
