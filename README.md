@@ -27,3 +27,10 @@ Meaning the _protocols_, _agents_ and other _artifacts_ are not known at compile
 ### Environment
 
 - [x] need Hypermedia environment where agents can live -> Yggdrasil
+
+### Other questions
+
+## Useful resources
+
+- [collection of ontologies](https://lov.linkeddata.es/dataset/lov)
+- [GoodRelations ontology](https://www.heppnetz.de/projects/goodrelations/primer/)
