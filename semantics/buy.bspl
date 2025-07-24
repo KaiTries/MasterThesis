@@ -5,17 +5,23 @@ namespace bspl   = https://purl.org/bspl#
 namespace rdfs   = http://www.w3.org/2000/01/rdf-schema#
 namespace xsd    = http://www.w3.org/2001/XMLSchema#
 
+# --------------- Type declarations ----------------------
+buyID : xsd:string
+itemID : xsd:string
+item  : schema:Product
+money : schema:MonetaryAmount
+
 # --------------- protocol ------------------------------
-protocol Buy : bspl:Protocol
+Buy : # bspl:Protocol
   roles
     Buyer  : rdfs:Agent
     Seller : rdfs:Agent
 
   parameters
-    out key buyID  : xsd:string
-    out key itemID : xsd:string
-    out      item  : schema:Product
-    out      money : schema:MonetaryAmount
+    out key buyID
+    out key itemID
+    out      item 
+    out      money
 
   messages
     Pay  Buyer  -> Seller [ out buyID key, out itemID key, out money ]
