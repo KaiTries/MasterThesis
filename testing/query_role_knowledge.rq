@@ -1,0 +1,18 @@
+PREFIX ex:   <http://example.com/>
+PREFIX bspl: <https://purl.org/bspl/core#>
+
+SELECT DISTINCT ?role ?param
+WHERE {
+  ex:Buy bspl:hasMessage ?m .
+  ?m  bspl:fromRole ?role ;
+      bspl:hasMessageParam ?mp .
+  ?mp bspl:parameter ?param ;
+      bspl:direction bspl:in .
+  FILTER NOT EXISTS {
+    ex:Buy bspl:hasMessage ?m2 .
+    ?m2 bspl:hasMessageParam ?mp2 .
+    ?mp2 bspl:parameter ?param ;
+         bspl:direction bspl:out .
+  }
+}
+ORDER BY ?role ?param

@@ -1,0 +1,28 @@
+# --------------- prefix declarations --------------------
+@prefix gr = http://purl.org/goodrelations/v1
+@prefix onto = https://www.ontotext.com/proton/protonext.html#
+
+
+# --------------- Role declarations ----------------------
+Seller: gr:BusinessEntity, foaf:Agent
+Buyer: foaf:Agent
+
+money: onto:Money
+
+Buy {
+  roles Buyer, Seller
+  parameters out buyID key, out itemID key, out item, out money, out done
+
+  Seller -> Buyer: Offer[ out buyID key, out itemID key, out item]
+  Buyer -> Seller: Pay[ in buyID key, in itemID key, out money, out done]
+  Seller -> Buyer: Give[ in buyID key, in itemID key, in item, in done]
+}
+
+Buy2 {
+  roles Buyer, Seller
+  parameters out buyID key, out itemID key, out item, out money, out done
+
+  Seller -> Buyer: Offer[ out buyID key, out itemID key, out item]
+  Buyer -> Seller: Pay[ in buyID key, in itemID key, out money, in done ]
+  Seller -> Buyer: Give[ in buyID key, in itemID key, in item, out done ]
+}

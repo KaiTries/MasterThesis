@@ -1,5 +1,11 @@
 # Repo for my Masterthesis on interaction protocols in hypermedia environments
 
+## Immediate TODOs
+
+- [ ] Implement simple Agent that reasons on BSPL protocol if it can do role
+- - [ ] Agents know which atomic messsages they can send
+- [ ] Check Ontology
+
 ## Scenario
 
 Some user agent wants to buy a rug from some store. There exist two stores; the bazaar and the supermarket.

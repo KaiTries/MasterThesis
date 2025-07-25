@@ -1,0 +1,11 @@
+PREFIX ex:   <http://example.com/>
+PREFIX bspl: <https://purl.org/bspl/core#>
+
+SELECT DISTINCT ?param ?dir
+WHERE {
+  ex:Buy bspl:hasMessage ?m .
+  ?m bspl:hasMessageParam ?mp .
+  ?mp bspl:parameter ?param ;
+      bspl:direction ?dir .
+}
+ORDER BY ?param ?dir

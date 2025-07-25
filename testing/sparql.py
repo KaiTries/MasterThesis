@@ -16,3 +16,12 @@ g2 = Graph().parse("workspace.ttl", format="turtle")
 q2 = open("query_2.rq").read()
 for row in g2.query(q2):
     print(row)
+
+buy_rdf = Graph().parse("buy.ttl", format="turtle")
+query_params = open("query_params.rq").read()
+for row in buy_rdf.query(query_params):
+    print(row)
+
+query_params = open("query_role_knowledge.rq").read()
+for row in buy_rdf.query(query_params):
+    print(row)
