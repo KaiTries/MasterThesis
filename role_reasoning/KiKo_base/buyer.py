@@ -42,7 +42,7 @@ def pay_message(msg: Message, buyID, itemID, money):
     )
 
 async def give_reaction(msg):
-    print(msg)
+    logger.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
     return msg
 
 CAPABILITIES = {"Pay":pay_message}
