@@ -19,6 +19,11 @@ Meaning the _protocols_, _agents_ and other _artifacts_ are not known at compile
 - [ ] Possible semantic extensions to allow linking -> a GoodRelations:Offer might want to say bspl:usesProtocol
 - [ ] Translator that does BSPL <-> RDF
 
+#### BSPL Ontology
+
+[current ontology](https://github.com/KaiTries/MasterThesis/blob/main/testing/bspl.ttl)
+[Buy protocol expressed as RDF](https://github.com/KaiTries/MasterThesis/blob/main/testing/buy.ttl)
+
 ### Agent
 
 - [ ] Allow agents to find new protocols -> enable hypermedia controls
