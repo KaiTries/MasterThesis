@@ -11,6 +11,8 @@ import bspl
 buy = bspl.load_file("buy.bspl").export("Buy")
 from Buy import Buyer, Seller
 
+negotiate = bspl.load_file("negotiate.bspl").export("Negotiate")
+from Negotiate import B, S
 
 agents = {
     "Seller": [("127.0.0.1", 8004)],

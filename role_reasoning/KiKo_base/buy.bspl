@@ -1,0 +1,7 @@
+Buy {
+  roles Buyer, Seller
+  parameters out buyID key, out itemID key, out item, out money
+
+  Buyer -> Seller: Pay[ out buyID key, out itemID key, out money]
+  Seller -> Buyer: Give[ in buyID key, in itemID key, in money, out item ]
+}
