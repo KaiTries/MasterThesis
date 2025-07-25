@@ -1,0 +1,16 @@
+PREFIX gr:   <http://purl.org/goodrelations/v1#>
+PREFIX bspl: <https://purl.org/bspl#>
+PREFIX schema: <http://schema.org/>
+PREFIX ex: <http://example.com/> 
+
+SELECT ?offering ?action ?protocol WHERE {
+  ?offering a gr:Offering ;
+      gr:includesObject ?taq ;
+      schema:potentialAction ?action .
+  
+  ?action a schema:BuyAction ;
+    bspl:usesProtocol ?protocol .
+  
+  ?taq a gr:TypeAndQuantityNode ;
+      gr:typeOfGood <http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact> .
+}

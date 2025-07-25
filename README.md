@@ -23,6 +23,7 @@ Meaning the _protocols_, _agents_ and other _artifacts_ are not known at compile
 
 - [ ] Allow agents to find new protocols -> enable hypermedia controls
 - [ ] Agents need to know what roles other agents are capable off -> agent representation
+- [ ] Agents also need to reason on new protocols -> Can they particpate in them? Can they enact some role?
 
 ### Environment
 

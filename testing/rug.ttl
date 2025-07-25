@@ -1,0 +1,16 @@
+@base <http://localhost:8080/> .
+@prefix hmas: <https://purl.org/hmas/> .
+@prefix wotsec: <https://www.w3.org/2019/wot/security#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix example: <> .
+
+<workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact, example:Rug, gr:ActualProductOrServiceInstance;
+  td:title "rug";
+  td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
+    ];
+  hmas:isContainedIn <workspaces/bazaar#workspace> .
+
+<workspaces/bazaar/artifacts/rug> a hmas:ResourceProfile ;
+  hmas:isProfileOf <workspaces/bazaar/artifacts/rug#artifact> .
+
+<workspaces/bazaar#workspace> a hmas:Workspace .
