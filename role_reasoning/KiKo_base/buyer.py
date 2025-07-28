@@ -3,31 +3,29 @@ This agent initiates the logistics protocol by generating orders and handling pa
 """
 
 import logging
-import random
-import asyncio
 import bspl
 from bspl.adapter import Adapter
 from bspl.protocol import Message, Protocol
 
 
-
 buy = bspl.load_file("buy.bspl").export("Buy")
-from Buy import Buyer, Seller
+
+
 agents = {
     "Seller": [("127.0.0.1", 8004)],
     "Buyer": [("127.0.0.1", 8005)]
 }
 
-systems = {
-    "buy": {
-        "protocol": buy,
-        "roles": {
-            Buyer: "Buyer",
-            Seller: "Seller"
+
+def create_systems_for_protocol(protocol: Protocol):
+    return {
+        protocol.name.lower() : {
+            "protocol" : protocol,
+            "roles" : {
+                protocol.roles[role] : role for role in protocol.roles
+            }
         }
     }
-}
-
 
 logger = logging.getLogger("buyer")
 # logger.setLevel(logging.DEBUG)
@@ -77,6 +75,7 @@ if __name__ == "__main__":
     # find protocol
     # reason which role
     role = role_capable_of(buy)
+    systems = create_systems_for_protocol(buy)
     adapter = Adapter(role, systems, agents)
     # setup role
     setup_adapter(adapter, buy, role)
