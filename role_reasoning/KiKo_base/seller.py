@@ -17,37 +17,13 @@ agents = {
 
 logger = logging.getLogger("seller")
 
-def give_message(msg: Message, priorMsg: Message, item):
-    return msg(
-        item=priorMsg['itemID'],
-        **priorMsg.payload
-    )
+async def give_m(msg):
+    logger.info(f"Received buy order {msg['buyID']} for a {msg['itemID']} with bid: {msg['money']}$")
+    msg['item'] =  msg['itemID']
+    return msg
 
-
-def pay_reaction(pay_reaction_message: Message):
-    async def packed_generic(msg: Message):
-        logger.info(f"Received buy order {msg['buyID']} for a {msg['itemID']} with bid: {msg['money']}$")
-        response = give_message(pay_reaction_message, msg, msg["itemID"])
-
-        await adapter.send(response)
-        return msg
-    return packed_generic
-
-
-
-def setup_reactions(protocol: Protocol, reactions, reaction_mappings):
-    fitted_reactions = {}
-
-    for inc, out in reaction_mappings.items():
-        correct_function = reactions[inc](protocol.messages[out])
-        fitted_reactions[inc] = correct_function
-
-
-    return fitted_reactions
-    
-CAPABILITIES = {"Give": give_message}
-REACTIONS = {"Pay" : pay_reaction}
-REACTION_MAPPINGS = {"Pay": "Give"}
+REACTIONS = {}
+CAPABILITIES = {"Give": give_m}
 
 
 
@@ -57,7 +33,8 @@ if __name__ == "__main__":
     role = role_capable_of(capabilities=CAPABILITIES, protocol=buy)
     systems = create_systems_for_protocol(buy)
     adapter = Adapter(role, systems=systems, agents=agents)
-    reactions_for_adapter = setup_reactions(protocol=buy, reactions=REACTIONS, reaction_mappings=REACTION_MAPPINGS)
-    setup_adapter(reactions=reactions_for_adapter, adapter=adapter, protocol=buy, role=role)
+    setup_adapter(reactions=REACTIONS, adapter=adapter, protocol=buy, role=role)
+    adapter.enabled(buy.messages["Give"])(give_m)
+
 
     adapter.start()

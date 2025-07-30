@@ -14,6 +14,10 @@ adapter = Adapter("Buyer", systems, agents)
 logger = logging.getLogger("buyer")
 # logger.setLevel(logging.DEBUG)
 
+@adapter.decision()
+
+
+
 async def order_generator():
     """Generates sample orders with random items and addresses."""
     for orderID in range(2):

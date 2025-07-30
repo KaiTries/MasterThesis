@@ -5,6 +5,7 @@ This agent initiates the logistics protocol by generating orders and handling pa
 import logging
 import bspl
 from bspl.adapter import Adapter
+from bspl.adapter.core import COLORS
 from bspl.protocol import Message
 from utils import create_systems_for_protocol, role_capable_of, setup_adapter
 
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     # reason which role
     role = role_capable_of(capabilities=CAPABILITIES, protocol=buy)
     systems = create_systems_for_protocol(protocol=buy)
-    adapter = Adapter(role, systems, agents)
+    adapter = Adapter(role, systems, agents, color=COLORS[0])
     # setup role
     setup_adapter(reactions=REACTIONS, adapter=adapter, protocol=buy, role=role)
     # start adapter
