@@ -4,7 +4,7 @@ from rdflib.namespace import RDF
 import bspl
 from bspl.adapter import Adapter
 import requests
-from helpers import getProtocol
+from agents.utils.helpers import getProtocol
 # Should go into the bazaar and wait there
 # Should be subscribed to the bazaar workspace 
 # Must maintain his systems and agents table for kiko

@@ -16,7 +16,7 @@ sleep 5
 
 cd ..
 
-python agents/bazaar_agent.py &
+python -m agents.bazaar.bazaar_agent &
 BAZAAR_AGENT=$!
 
 
