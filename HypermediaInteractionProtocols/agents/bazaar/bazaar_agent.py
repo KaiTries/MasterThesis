@@ -4,7 +4,10 @@ from rdflib.namespace import RDF
 import bspl
 from bspl.adapter import Adapter
 import requests
-from agents.utils.helpers import getProtocol
+from agents.utils.helpers import *
+# threading and queue for coordination
+import threading
+import queue
 # Should go into the bazaar and wait there
 # Should be subscribed to the bazaar workspace 
 # Must maintain his systems and agents table for kiko
@@ -17,32 +20,47 @@ BAZAAR = 'http://localhost:8080/workspaces/bazaar'
 ME = [('127.0.0.1',8010)]
 MY_ROLES = ['Seller']
 
-agents_in_bazaar = {}
 agents = {}
+adapter = None
+
+# Adapter control
+adapter = None
+adapter_control_queue = queue.Queue()
+
+# Restore agents_in_bazaar
+agents_in_bazaar = {}
 
 
 
 app = Flask(__name__)
 
 
+
+# Instead of running Adapter in a thread, signal main thread to restart it
+def request_adapter_restart(new_adapter):
+    adapter_control_queue.put(new_adapter)
+
+
 @app.route('/callback', methods=['POST'])
 def callback():
+    global adapter
+    global agents
     g = Graph()
     turtle_data = request.data.decode('utf-8')
     g.parse(data=turtle_data, format='turtle')
 
-    agents = set()
+    agents_local = set()
     for subj in g.subjects(RDF.type, URIRef(JACAMO_BODY)):
         # do not care about own body
         if 'body_bazaar_agent' in str(subj):
             continue
-        agents.add(str(subj))
+        agents_local.add(str(subj))
 
-    to_remove = set(agents_in_bazaar) - agents
+    to_remove = set(agents_in_bazaar) - agents_local
     for agent in to_remove:
         agents_in_bazaar.pop(agent)
 
-    for agent in agents:
+    for agent in agents_local:
         if agent not in agents_in_bazaar:
             print(f'new agent {agent}')
             agents_in_bazaar[agent] = False
@@ -52,6 +70,9 @@ def callback():
 
     print(agents_in_bazaar)
     updateAgents(ME, MY_ROLES)
+    new_adapter = Adapter('Seller',systems=systems, agents=agents)
+    addReactors(new_adapter, protocol)
+    request_adapter_restart(new_adapter)
     return "OK", 200
 
 
@@ -127,18 +148,32 @@ def addReactors(adapter, protocol):
 
 
 
+
+def flask_thread():
+    app.run(host='localhost', port=8082)
+
 if __name__ == '__main__':
     success = joinBazaar()
     success = setupWebsubCallback()
-    protocol = getProtocol(BAZAAR).export('Buy')
-    systems = setSystems(protocol=protocol)
+    protocol = getProtocol(BAZAAR, "Buy")
+    systems = create_systems_for_protocol(protocol=protocol)
     updateAgents(ME, MY_ROLES)
-    updateRoles(protocol,systems)
     print(systems)
     print(agents)
-    adapter = Adapter('Seller',systems=systems, agents=agents)
-    addReactors(adapter, protocol)
 
-    if success == 200:
-        app.run(host='localhost', port=8082)
+    # Start Flask in a background thread
+    flask_t = threading.Thread(target=flask_thread, daemon=True)
+    flask_t.start()
+
+    # Initial Adapter
+    adapter = Adapter('Seller', systems=systems, agents=agents)
+    addReactors(adapter, protocol)
+    while True:
+        # Start or restart Adapter as needed
         adapter.start()
+        # Wait for a new adapter to be requested
+        new_adapter = adapter_control_queue.get()
+        print("Restarting Adapter...")
+        adapter.stop()
+        adapter = new_adapter
+        addReactors(adapter,protocol=protocol)
