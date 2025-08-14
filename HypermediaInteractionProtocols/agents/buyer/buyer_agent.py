@@ -3,9 +3,6 @@ import requests
 import logging
 import bspl
 from bspl.protocol import Message
-from rdflib import Graph, Namespace, Literal
-import time
-from agents.utils.helpers import *
 from agents.buyer.knowledge import *
 from agents.agent.core import HypermediaAgent
 # Must buy groceries
@@ -32,27 +29,28 @@ class BuyerAgent(HypermediaAgent):
     def __init__(self):
         super().__init__(
             name="buyer",
-            web_id=WEB_ID,
+            web_id=WEB_ID, 
             agent_name=AgentName,
-            bazaar_uri=BAZAAR_URI,
+            workspace_uri=BAZAAR_URI, #this needs to go out definitely
             self_uri=SELF,
             me=ME,
-            my_roles=MY_ROLES,
-            body_metadata=BODY_METADATA,
+            body_metadata=BODY_METADATA, # some initial body metadata -> is added to all representations
             capabilities=CAPABILITIES,
             reactions=REACTIONS
         )
 
-    def initial_message_func(self):
-        initial_message = self.protocol.roles[self.my_roles[0]].messages()["Pay"]
+    def initial_message_func(self, protocol_name):
+        initial_message = self.protocol.roles[self.my_roles[protocol_name]].messages()["Pay"]
         return pay_message(initial_message,1,'item',1)
 
 
 if __name__ == '__main__':
     agent = BuyerAgent()
+    protocol_name = "Buy"
     agent.run(
-        protocol_name="Buy",
-        initial_message_func=agent.initial_message_func
+        protocol_name=protocol_name,
+        initial_message_func=agent.initial_message_func,
+        initial_message_args={"protocol_name":protocol_name}
     )
 
 # if __name__ == '__main__':

@@ -108,11 +108,12 @@ def getAgentsIn(workspace: str, ownAddr: str):
             agentsList[str(agent)] = (target_clean[0],int(target_clean[1]))
     return agentsList
 
-def getAgents(workspace, ownAddr, my_roles, me):
+def getAgents(workspace, ownAddr, my_role, me):
     agents_in_workspace = getAgentsIn(workspace=workspace, ownAddr=ownAddr)
     agents = {}
-    for role in my_roles:
-        agents[role] = me
+    agents[my_role] = me
+    print(agents_in_workspace)
+    print("test")
 
     for agent in agents_in_workspace:
         agents['Seller'] = agents_in_workspace[agent]
