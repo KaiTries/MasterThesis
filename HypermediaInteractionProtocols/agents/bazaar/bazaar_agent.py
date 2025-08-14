@@ -8,6 +8,7 @@ from agents.utils.helpers import *
 # threading and queue for coordination
 import threading
 import queue
+import asyncio
 # Should go into the bazaar and wait there
 # Should be subscribed to the bazaar workspace 
 # Must maintain his systems and agents table for kiko
@@ -68,6 +69,8 @@ def callback():
         else:
             print(f'skipping agent {agent}')
 
+    if adapter is not None:
+        asyncio.run(adapter.stop())
     print(agents_in_bazaar)
     updateAgents(ME, MY_ROLES)
     new_adapter = Adapter('Seller',systems=systems, agents=agents)
@@ -152,6 +155,10 @@ def addReactors(adapter, protocol):
 def flask_thread():
     app.run(host='localhost', port=8082)
 
+
+
+
+
 if __name__ == '__main__':
     success = joinBazaar()
     success = setupWebsubCallback()
@@ -169,11 +176,9 @@ if __name__ == '__main__':
     adapter = Adapter('Seller', systems=systems, agents=agents)
     addReactors(adapter, protocol)
     while True:
-        # Start or restart Adapter as needed
-        adapter.start()
         # Wait for a new adapter to be requested
         new_adapter = adapter_control_queue.get()
         print("Restarting Adapter...")
-        adapter.stop()
         adapter = new_adapter
         addReactors(adapter,protocol=protocol)
+        adapter.start()
