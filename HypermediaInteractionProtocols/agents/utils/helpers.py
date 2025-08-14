@@ -8,6 +8,29 @@ from bspl.adapter import Adapter
 def getModel(data: str, format='turtle'):
     return Graph().parse(data=data, format=format)
 
+def postWorkspace(workspace_uri, WEB_ID, AgentName):
+    headers = {
+        'X-Agent-WebID': WEB_ID,
+        'X-Agent-LocalName': AgentName,
+        'Content-Type': 'text/turtle'
+    }
+
+    response = requests.post(workspace_uri,headers=headers)
+    return response.status_code
+
+def updateBody(body_uri,WEB_ID, AgentName,metadata):
+    old_representation = requests.get(body_uri).text
+
+    headers = {
+        'X-Agent-WebID': WEB_ID,
+        'X-Agent-LocalName': AgentName,
+        'Content-Type': 'text/turtle'
+    }
+
+    response = requests.put(body_uri,headers=headers,data=old_representation + metadata)
+    return response.status_code
+
+
 ##############################
 ### Helper functions to read a TD get the wanted action
 ### and then parse the action and execute the request
