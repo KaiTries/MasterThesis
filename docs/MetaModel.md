@@ -8,19 +8,15 @@ classDiagram
 
  %% --- Hypermedia layer ---
  class HypermediaSpace {
-   +id
+    +uri
  }
  class Workspace {
-   +id
    +uri
-   +topic/context
  }
  class Entity {
-   +id
    +kind // artifact, agentBody, etc...
  }
  class AgentBody {
-   +id
    +uri
    +capabilities : Set<MessageName>
  }
@@ -34,16 +30,19 @@ classDiagram
    +value
  }
 
- %% containment & annotations
+ %% workspace
  HypermediaSpace "1" o-- "*" Workspace : hosts
+ Workspace "*" o-- "*" Workspace : contains
  Workspace "1" o-- "*" Entity : contains
- Workspace "1" o-- "*" Workspace : contains
- Entity "0..*" o-- "0..*" SemanticAnnotation : annotates
- AgentBody "0..*" o-- "0..*" HypermediaControl : offers
  Workspace "0..*" o-- "0..*" HypermediaControl : advertises
 
- %% specialization
+ %% Entities
+ Entity "0..*" o-- "0..*" SemanticAnnotation : annotates
+
+ %% AgentBody
+ AgentBody "0..*" o-- "0..*" HypermediaControl : offers
  Entity <|-- AgentBody : is-a
+
 
  %% --- Protocol specification (BSPL/IOSE) ---
  class ProtocolSpec {
