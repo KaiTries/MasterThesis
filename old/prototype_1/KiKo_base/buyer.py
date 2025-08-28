@@ -30,7 +30,9 @@ async def order_generator():
         )
         await asyncio.sleep(0)
 
+
 @adapter.reaction(Give)
+#@adapter.enabled(Give)
 async def packed(msg):
     """Handles packed items by logging their status."""
     logger.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")

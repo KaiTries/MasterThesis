@@ -14,9 +14,12 @@ adapter = Adapter("Seller", systems, agents)
 logger = logging.getLogger("seller")
 # logger.setLevel(logging.DEBUG)
 
+@adapter.enabled(Give)
+async def give_2(msg):
+    pass
 
 @adapter.reaction(Pay)
-async def packed(msg):
+async def give_product(msg):
     """Handles packed items by logging their status."""
     logger.info(f"Received buy order {msg['buyID']} for a {msg['itemID']} with bid: {msg['money']}$")
     await adapter.send(Give(
