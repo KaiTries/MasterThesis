@@ -55,27 +55,56 @@ as well as the role negotiation
 ## Metamodel - Only RoleBinding
 
 ```mermaid
-sequenceDiagram
-autonumber
-participant I as Initiator:AgentBody
-participant MP as MetaProtocol
-participant A* as Candidate Agents
-participant BS as BindingSession
+classDiagram
 
-I->>BS: create(ProtocolSpec, RoleRequirements, Goal)
-I->>BS: optionally self-assign eligible roles
-I->>MP: broadcast RoleRequest per unmet RoleRequirement
-A*-->>MP: RoleOffer(capability proof, terms)
-MP-->>BS: deliver offers
-I->>BS: apply SelectionPolicy -> BindingProposal
-BS-->>A*: propose bindings for selected roles
-A*-->>BS: Acceptance / Rejection
-alt all roles accepted & cardinalities satisfied
-  BS->>I: state=Committed
-  BS->>I: spawn ProtocolInstance
-else some rejection or timeout
-  BS->>I: state=Soliciting (retry) | Aborted
-end
+
+%% --- Target protocol (referenced only) ---
+class ProtocolSpec { +name }
+class Role { +name }
+ProtocolSpec "1" o-- "*" Role : defines
+
+%% --- Agents ---
+class Agent { +id }
+
+%% --- Metaprotocol definition (simple & universal) ---
+class MetaProtocol {
+  +name = "RoleOffer"
+  +universallyKnown = true
+}
+class MP_Role { +name /* Initiator | Candidate */ }
+class MP_Message { +name /* OfferRole | Accept | Reject */ }
+
+MetaProtocol "1" o-- "*" MP_Role : defines
+MetaProtocol "1" o-- "*" MP_Message : declares
+MP_Role "*" <-- "*" MP_Message : sends/receives
+
+%% --- Runtime artifacts/messages ---
+class OfferRole {
+  +id
+  +protocol : ProtocolSpec
+  +role : Role
+  +from : Agent  // Initiator
+  +to : Agent    // Candidate
+}
+class Accept { +timestamp }
+class Reject { +reason? }
+
+%% --- Outcome on acceptance ---
+class RoleBinding { +id }
+
+%% --- Relations / flow ---
+Agent "1" --> "0..*" OfferRole : sends(OfferRole)
+OfferRole "1" --> "1" ProtocolSpec : about
+OfferRole "1" --> "1" Role : asks_for
+Agent "0..*" --> "0..*" Accept : sends(Accept)
+Agent "0..*" --> "0..*" Reject : sends(Reject)
+Accept "*" --> "1" OfferRole : of
+Reject "*" --> "1" OfferRole : of
+
+%% acceptance yields a binding
+Accept "1" --> "1" RoleBinding : yields
+RoleBinding "*" --> "1" Role : as
+RoleBinding "*" --> "1" Agent : enactedBy  %% the Candidate
 ```
 
 ## Maybe still too complicated
