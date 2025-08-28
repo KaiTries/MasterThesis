@@ -8,6 +8,7 @@ graph TD
     A -->|includes| C[Message]
     A -->|includes| D[Role]
     E[Agent] -->|enacts| D
+    E -->|capable of| C
     C -->|describes| D
 
 
