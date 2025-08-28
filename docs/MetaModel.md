@@ -49,6 +49,9 @@ graph
 
 ```
 
+The simple metamodel can describe the discovery of protocols, but fails to describe the dynamic binding of agents to roles,
+as well as the role negotiation
+
 ## Maybe still too complicated
 
 ```mermaid
