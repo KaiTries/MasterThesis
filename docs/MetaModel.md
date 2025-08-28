@@ -2,6 +2,82 @@
 
 ## Metamodel Draft
 
+## simpler
+
+```mermaid
+classDiagram
+
+ %% --- Hypermedia layer ---
+ class HypermediaSpace {
+    +uri
+ }
+ class Workspace {
+   +uri
+ }
+ class Entity {
+   +kind // artifact, agentBody, etc...
+ }
+ class Agent {
+   +uri
+   +capabilities : Set<MessageName>
+ }
+ class HypermediaControl {
+   +rel
+   +method
+   +target
+ }
+ class SemanticAnnotation {
+   +property
+   +value
+ }
+
+ %% workspace
+ HypermediaSpace "1" o-- "*" Workspace : hosts
+ Workspace "1" o-- "*" Entity : contains
+ Workspace "0..*" o-- "0..*" HypermediaControl : advertises
+
+ %% Entities
+ Entity "0..*" o-- "0..*" SemanticAnnotation : annotates
+
+ %% AgentBody
+ Agent "0..*" o-- "0..*" HypermediaControl : offers
+ Entity <|-- Agent : is-a
+
+
+ %% --- Protocol specification (BSPL/IOSE) ---
+ class Protocol {
+   +name
+ }
+ class Role {
+   +name
+ }
+ class Message {
+   +name
+ }
+
+ Protocol "1" o-- "*" Role : defines
+ Protocol "1" o-- "*" Message : declares
+ Role "*" <-- "*" Message : sends/receives
+
+ class MetaProtocol {
+   +name = "RoleBindingProtocol"
+ }
+
+ Role "*" --> "1" AgentBody : enactedBy
+
+ %% --- Cues for in-context discovery ---
+ class Signifier {
+   +href
+ }
+ Workspace "0..*" o-- "0..*" Signifier : exposes
+ Protocol "0..*" o-- "0..*" Signifier : linksTo
+ SemanticAnnotation "0..*" --> "0..*" Protocol : references
+ HypermediaControl "0..*" --> "0..*" Message : triggers
+
+```
+
+## Maybe still too complicated
+
 ```mermaid
 classDiagram
 
@@ -87,7 +163,7 @@ classDiagram
    +href
  }
  Workspace "0..*" o-- "0..*" Signifier : exposes
- Entity "0..*" o-- "0..*" Signifier : linksTo
+ ProtocolSpec "0..*" o-- "0..*" Signifier : linksTo
  SemanticAnnotation "0..*" --> "0..*" ProtocolSpec : references
  HypermediaControl "0..*" --> "0..*" Message : triggers
 
