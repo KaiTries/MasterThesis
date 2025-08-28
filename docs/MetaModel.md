@@ -21,11 +21,6 @@ classDiagram
    +uri
    +capabilities : Set<MessageName>
  }
- class HypermediaControl {
-   +rel
-   +method
-   +target
- }
  class SemanticAnnotation {
    +property
    +value
@@ -34,13 +29,11 @@ classDiagram
  %% workspace
  HypermediaSpace "1" o-- "*" Workspace : hosts
  Workspace "1" o-- "*" Entity : contains
- Workspace "0..*" o-- "0..*" HypermediaControl : advertises
 
  %% Entities
  Entity "0..*" o-- "0..*" SemanticAnnotation : annotates
 
  %% AgentBody
- Agent "0..*" o-- "0..*" HypermediaControl : offers
  Entity <|-- Agent : is-a
 
 
@@ -59,10 +52,6 @@ classDiagram
  Protocol "1" o-- "*" Message : declares
  Role "*" <-- "*" Message : sends/receives
 
- class MetaProtocol {
-   +name = "RoleBindingProtocol"
- }
-
  Role "*" --> "1" AgentBody : enactedBy
 
  %% --- Cues for in-context discovery ---
@@ -72,7 +61,6 @@ classDiagram
  Workspace "0..*" o-- "0..*" Signifier : exposes
  Protocol "0..*" o-- "0..*" Signifier : linksTo
  SemanticAnnotation "0..*" --> "0..*" Protocol : references
- HypermediaControl "0..*" --> "0..*" Message : triggers
 
 ```
 
