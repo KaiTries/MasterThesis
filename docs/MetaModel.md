@@ -56,7 +56,6 @@ as well as the role negotiation
 
 ```mermaid
 classDiagram
-direction LR
 
 %% --- Core actors & intents ---
 class AgentBody {
