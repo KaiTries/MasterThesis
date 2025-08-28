@@ -9,21 +9,14 @@ classDiagram
 
  %% --- Hypermedia layer ---
  class HypermediaSpace {
-    +uri
  }
  class Workspace {
-   +uri
  }
  class Entity {
-   +kind // artifact, agentBody, etc...
  }
  class Agent {
-   +uri
-   +capabilities : Set<MessageName>
  }
  class SemanticAnnotation {
-   +property
-   +value
  }
 
  %% workspace
@@ -39,13 +32,10 @@ classDiagram
 
  %% --- Protocol specification (BSPL/IOSE) ---
  class Protocol {
-   +name
  }
  class Role {
-   +name
  }
  class Message {
-   +name
  }
 
  Protocol "1" o-- "*" Role : defines
@@ -56,7 +46,6 @@ classDiagram
 
  %% --- Cues for in-context discovery ---
  class Signifier {
-   +href
  }
  Workspace "0..*" o-- "0..*" Signifier : exposes
  Protocol "0..*" o-- "0..*" Signifier : linksTo
