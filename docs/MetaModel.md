@@ -4,7 +4,6 @@
 
 ```mermaid
 classDiagram
- direction LR
 
  %% --- Hypermedia layer ---
  class HypermediaSpace {
