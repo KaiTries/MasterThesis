@@ -17,7 +17,7 @@ classDiagram
  }
  class Entity {
    +id
-   +kind  // artifact, place, item...
+   +kind // artifact, agentBody, etc...
  }
  class AgentBody {
    +id
@@ -34,12 +34,16 @@ classDiagram
    +value
  }
 
- HypermediaSpace "1" o-- "*" Workspace : contains
+ %% containment & annotations
+ HypermediaSpace "1" o-- "*" Workspace : hosts
  Workspace "1" o-- "*" Entity : contains
- Workspace "1" o-- "*" AgentBody : hosts
+ Workspace "1" o-- "*" Workspace : contains
  Entity "0..*" o-- "0..*" SemanticAnnotation : annotates
  AgentBody "0..*" o-- "0..*" HypermediaControl : offers
  Workspace "0..*" o-- "0..*" HypermediaControl : advertises
+
+ %% specialization
+ Entity <|-- AgentBody : is-a
 
  %% --- Protocol specification (BSPL/IOSE) ---
  class ProtocolSpec {
