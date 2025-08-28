@@ -52,6 +52,112 @@ graph
 The simple metamodel can describe the discovery of protocols, but fails to describe the dynamic binding of agents to roles,
 as well as the role negotiation
 
+## Metamodel - Only RoleBinding
+
+```mermaid
+classDiagram
+direction LR
+
+%% --- Core actors & intents ---
+class AgentBody {
+  +id
+  +capabilities : Set<MessageName>
+}
+class Goal {
+  +id
+  +description
+}
+AgentBody "1" o-- "0..*" Goal : pursues
+
+%% --- Protocol to be enacted ---
+class ProtocolSpec {
+  +name
+  +language = "BSPL"
+}
+class Role {
+  +name
+}
+class Message {
+  +name
+}
+ProtocolSpec "1" o-- "*" Role : defines
+ProtocolSpec "1" o-- "*" Message : declares
+Role "*" <-- "*" Message : sends/receives  %% informational (enactability check)
+
+%% --- Binding problem definition ---
+class BindingSession {
+  +id
+  +state : Draft|Soliciting|Resolving|Committed|Aborted
+  +initiatorId
+}
+class RoleRequirement {
+  +min : int
+  +max : int
+  +selfEligible : bool  // initiator may enact this role?
+}
+BindingSession "1" --> "1" ProtocolSpec : for
+BindingSession "1" o-- "*" RoleRequirement : needs
+RoleRequirement "*" --> "1" Role : role
+
+%% --- Candidate discovery & offers (meta-protocol exchanges) ---
+class RoleRequest {
+  +id
+  +deadline?
+  +criteria? : JSON
+}
+class RoleOffer {
+  +id
+  +score? : number
+  +evidence? : CapabilityProof
+}
+class CapabilityProof {
+  +summary
+}
+
+BindingSession "1" o-- "*" RoleRequest : broadcasts
+RoleRequest "*" --> "1" RoleRequirement : targets
+AgentBody "0..*" --> "0..*" RoleOffer : submits
+RoleOffer "*" --> "1" RoleRequest : answers
+RoleOffer "0..1" --> "1" CapabilityProof : proves
+
+%% --- Resolution & commitments ---
+class SelectionPolicy {
+  +name
+  +logic? : reference
+}
+class BindingProposal {
+  +id
+}
+class Acceptance {
+  +timestamp
+}
+class Rejection {
+  +reason?
+}
+class RoleBinding {
+  +id
+}
+class ProtocolInstance {
+  +id
+}
+
+BindingSession "1" --> "0..1" SelectionPolicy : uses
+BindingSession "1" o-- "0..*" BindingProposal : proposes
+BindingProposal "*" --> "*" RoleOffer : includes
+BindingProposal "1" o-- "*" RoleBinding : resultsIn(when accepted)
+RoleBinding "*" --> "1" RoleRequirement : satisfies
+RoleBinding "*" --> "1" AgentBody : enactedBy
+RoleBinding "*" --> "1" Role : as
+
+%% accept/reject handshake on proposals
+BindingProposal "1" o-- "0..*" Acceptance : onAllParties
+BindingProposal "1" o-- "0..*" Rejection : anyParty
+
+%% when all requirements met, instantiate protocol
+BindingSession "1" --> "0..1" ProtocolInstance : spawns(when committed)
+ProtocolSpec "1" <-- "0..*" ProtocolInstance : enacts
+```
+
 ## Maybe still too complicated
 
 ```mermaid
