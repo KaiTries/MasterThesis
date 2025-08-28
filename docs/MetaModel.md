@@ -42,7 +42,7 @@ classDiagram
  Protocol "1" o-- "*" Message : declares
  Role "*" <-- "*" Message : sends/receives
 
- Role "*" --> "1" AgentBody : enactedBy
+ Role "*" --> "1" Agent : enactedBy
 
  %% --- Cues for in-context discovery ---
  class Signifier {
