@@ -30,7 +30,7 @@ graph
  D --> |is-a| C
 
 
- %% --- Protocol specification (BSPL/IOSE) ---
+ %% --- Protocol specification (BSPL) ---
  F[Protocol]
  G[Role]
  H[Message]
