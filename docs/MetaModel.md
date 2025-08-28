@@ -4,6 +4,11 @@
 
 ## simpler
 
+The simple Idea is that entities exist in the hypermedia space, which is separated into workspace.
+Workspaces tell us which protocols care available in the context of locality.
+Entities in the workspace might reference protocols through semantic annotations.
+A protocol consists of roles and messages, a role can be enacted by an agent.
+
 ```mermaid
 classDiagram
 
