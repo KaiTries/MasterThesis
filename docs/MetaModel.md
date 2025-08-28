@@ -38,7 +38,7 @@ graph
  F -->|defines| G
  F -->|declares| H
  G -->|sendes/receives| H
- G -->|enactedBy| Agent
+ G -->|enactedBy| D
 
  %% --- Cues for in-context discovery ---
  I[Signifier]
