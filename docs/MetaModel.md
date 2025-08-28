@@ -3,7 +3,7 @@
 ```mermaid
 graph TD
     A[Protocol Specification] --> B[Protocol Instance]
-    A --> C[Message]
+    A -->|test| C[Message]
     A --> D[Role]
     E[Agent] --> D
     C --> D
