@@ -3,34 +3,6 @@
 ## Metamodel Draft
 
 ```mermaid
-graph TD
-    A[Protocol Specification] -->|instantiates| B[Protocol Instance]
-    A -->|includes| C[Message]
-    A -->|includes| D[Role]
-    E[Agent] -->|enacts| D
-    E -->|capable of| C
-    C -->|describes| D
-
-
-```
-
-### Metamodel of BSPL part
-
-```mermaid
-graph TD
-    A[Protocol Specification] -->|instantiates| B[Protocol Instance]
-    A -->|includes| C[Message]
-    A -->|includes| D[Role]
-    E[Agent] -->|enacts| D
-    E -->|capable of| C
-    C -->|describes| D
-
-
-```
-
-### Metamodel of Hypemedia part
-
-```mermaid
 classDiagram
  direction LR
 
