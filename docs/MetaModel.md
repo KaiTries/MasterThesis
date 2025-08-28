@@ -4,7 +4,7 @@
 
 ```mermaid
 graph TD
-    A[Protocol Specification] -->|| B[Protocol Instance]
+    A[Protocol Specification] -->|instantiates| B[Protocol Instance]
     A -->|includes| C[Message]
     A -->|includes| D[Role]
     E[Agent] -->|enacts| D
