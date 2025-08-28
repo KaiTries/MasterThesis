@@ -97,5 +97,5 @@ parameters
   M -> B: DeliveryUpdate( in  orderId, in  trackingNo, in  shipDate )
 
   // Optional: buyer cancels before acceptance/fulfillment
-    B -> M: Cancel ( in  orderId, out cancelReason )
+  B -> M: Cancel ( in  orderId, out cancelReason )
 ```
