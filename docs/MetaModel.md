@@ -10,51 +10,42 @@ Entities in the workspace might reference protocols through semantic annotations
 A protocol consists of roles and messages, a role can be enacted by an agent.
 
 ```mermaid
-classDiagram
+graph
 
  %% --- Hypermedia layer ---
- class HypermediaSpace {
- }
- class Workspace {
- }
- class Entity {
- }
- class Agent {
- }
- class SemanticAnnotation {
- }
+ A[HypermediaSpace]
+ B[Workspace]
+ C[Entity]
+ D[Agent]
+ E[SemanticAnnotation]
 
  %% workspace
- HypermediaSpace "1" o-- "*" Workspace : hosts
- Workspace "1" o-- "*" Entity : contains
+ A -->|hosts| B
+ B -->|contains| C
 
  %% Entities
- Entity "0..*" o-- "0..*" SemanticAnnotation : annotates
+ E -->|annotates| C
 
  %% AgentBody
- Entity <|-- Agent : is-a
+ D --> |is-a| C
 
 
  %% --- Protocol specification (BSPL/IOSE) ---
- class Protocol {
- }
- class Role {
- }
- class Message {
- }
+ F[Protocol]
+ G[Role]
+ H[Message]
 
- Protocol "1" o-- "*" Role : defines
- Protocol "1" o-- "*" Message : declares
- Role "*" <-- "*" Message : sends/receives
-
- Role "*" --> "1" Agent : enactedBy
+ F -->|defines| G
+ F -->|declares| H
+ G -->|sendes/receives| H
+ G -->|enactedBy| Agent
 
  %% --- Cues for in-context discovery ---
- class Signifier {
- }
- Workspace "0..*" o-- "0..*" Signifier : exposes
- Protocol "0..*" o-- "0..*" Signifier : linksTo
- SemanticAnnotation "0..*" --> "0..*" Protocol : references
+ I[Signifier]
+
+ B -->|exposes| I
+ I -->|linksTo| F
+ E -->|references| F
 
 ```
 
