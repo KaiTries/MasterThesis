@@ -8,6 +8,7 @@ from agents.utils.helpers import *
 # threading and queue for coordination
 import threading
 import queue
+import logging
 # Should go into the bazaar and wait there
 # Should be subscribed to the bazaar workspace 
 # Must maintain his systems and agents table for kiko
@@ -34,7 +35,7 @@ agents_in_bazaar = {}
 
 app = Flask(__name__)
 
-
+logger = logging.getLogger("agent")
 
 # Instead of running Adapter in a thread, signal main thread to restart it
 def request_adapter_restart(new_adapter):
@@ -43,6 +44,7 @@ def request_adapter_restart(new_adapter):
 
 @app.route('/callback', methods=['POST'])
 def callback():
+    logger.info(f"Workspace changed - updating agents list")
     global adapter
     global agents
     g = Graph()
@@ -62,13 +64,13 @@ def callback():
 
     for agent in agents_local:
         if agent not in agents_in_bazaar:
-            print(f'new agent {agent}')
+            logger.info(f"new agent found: {agent}")
             agents_in_bazaar[agent] = False
             addAgent(agent)
         else:
-            print(f'skipping agent {agent}')
+            logger.info(f'skipping agent {agent}')
 
-    print(agents_in_bazaar)
+
     updateAgents(ME, MY_ROLES)
     new_adapter = Adapter('Seller',systems=systems, agents=agents)
     addReactors(new_adapter, protocol)
@@ -127,7 +129,7 @@ def updateAgents(me, my_roles):
 
     for agent in agents_in_bazaar:
         agents['Buyer'] = agents_in_bazaar[agent]
-    print(agents)
+    logger.info(f"agent list for MAS: {agents}")
     
 def updateRoles(protocol, systems):
     for role in protocol.roles:
@@ -158,8 +160,6 @@ if __name__ == '__main__':
     protocol = getProtocol(BAZAAR, "Buy")
     systems = create_systems_for_protocol(protocol=protocol)
     updateAgents(ME, MY_ROLES)
-    print(systems)
-    print(agents)
 
     # Start Flask in a background thread
     flask_t = threading.Thread(target=flask_thread, daemon=True)

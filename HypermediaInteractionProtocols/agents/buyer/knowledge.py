@@ -13,7 +13,8 @@ BODY_METADATA = """
 @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
 @prefix htv: <http://www.w3.org/2011/http#> .
 
-<workspaces/bazaar/artifacts/body_buyer#artifact> td:hasActionAffordance [ a td:ActionAffordance;
+<workspaces/bazaar/artifacts/body_buyer#artifact> 
+    td:hasActionAffordance [ a td:ActionAffordance;
     td:name "kikoAdapter";
     td:hasForm [
         htv:methodName "GET";

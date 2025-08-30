@@ -12,6 +12,7 @@ logger = logging.getLogger("buyer")
 
 ##### Capabilities
 def pay_message(msg: Message, buyID, itemID, money):
+    logger.info(f"Initiating buy protocol for {itemID}")
     return msg(
         buyID=buyID,
         itemID=itemID,

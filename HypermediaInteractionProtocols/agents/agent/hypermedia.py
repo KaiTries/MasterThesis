@@ -4,7 +4,9 @@ import bspl
 from rdflib import Graph, Namespace, Literal
 from bspl.protocol import Protocol
 from bspl.adapter import Adapter
+import logging
 
+logger = logging.getLogger("agent")
 # Namespaces
 TD = Namespace('https://www.w3.org/2019/wot/td#')   
 HTV = Namespace("http://www.w3.org/2011/http#")
@@ -50,7 +52,7 @@ def getAction(model: Graph, affordanceName: str):
     for action in model.subjects(RDF.type, TD.ActionAffordance):
         name = model.value(action, TD.name)
         if name == Literal(affordanceName):
-            print("found action", name)
+            logger.info(f"found action '{name}'")
             return action
 
 def getForm(model: Graph, target_action: Graph):
@@ -75,6 +77,7 @@ def getProtocol(workspace, protocolName):
     params = createRequest(workspace, form)
     response = requests.request(**params)
     protocol = bspl.load(response.text).export(protocolName)
+    logger.info(f"found protocol '{protocolName}'")
     return protocol
 
 def get_kiko_adapter_target(model):
@@ -98,7 +101,6 @@ def getAgentsIn(workspace: str, ownAddr: str):
     response = requests.get(workspace + 'artifacts/')
     containedArtifacts = getModel(response.text)
     agents = list(containedArtifacts.subjects(RDF.type, JACAMO.Body))
-    print("Agents of type jacamo:Body:", agents)
     agentsList = {}
     for agent in agents:
         if str(agent) != ownAddr:
@@ -106,14 +108,13 @@ def getAgentsIn(workspace: str, ownAddr: str):
             target = get_kiko_adapter_target(getModel(response.text))
             target_clean = target.removeprefix('http://').removesuffix('/').split(':')
             agentsList[str(agent)] = (target_clean[0],int(target_clean[1]))
+    logger.info(f"found other agents: {agentsList}")
     return agentsList
 
 def getAgents(workspace, ownAddr, my_role, me):
     agents_in_workspace = getAgentsIn(workspace=workspace, ownAddr=ownAddr)
     agents = {}
     agents[my_role] = me
-    print(agents_in_workspace)
-    print("test")
 
     for agent in agents_in_workspace:
         agents['Seller'] = agents_in_workspace[agent]
