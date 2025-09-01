@@ -1,0 +1,14 @@
+protocol PO Pay Cancel Ship {
+  roles B, S
+  parameters out ID key, out item, out price, out outcome
+  private pDone, gDone, rescind
+
+  B → S: PO [out ID key, out item, out price]
+
+  B → S: cancel [in ID key, nil gDone, out rescind]
+  B → S: pay [in ID key, in price, in item, out pDone]
+
+  S → B: ship [in ID key, in item, nil rescind, out gDone]
+  S → B: cancelAck [in ID key, in rescind, nil gDone, out outcome]
+  S → B: payAck [in ID key, in pDone, out outcome]
+}

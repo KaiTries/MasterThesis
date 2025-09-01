@@ -1,0 +1,12 @@
+Either-Starts {
+  roles B, S
+  parameters out ID key, out item
+  B → S: rfq[out ID key, out item]
+  S → B: recommend[out ID key, out item]
+}
+
+Buyer-Starts {
+  roles B, S
+  parameters out ID key, out item
+  B → S: rfq[out ID key, out item]
+}

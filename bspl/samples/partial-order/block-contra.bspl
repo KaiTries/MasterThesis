@@ -1,0 +1,14 @@
+protocol Block-Contra {
+ roles A, B
+ parameters out ID key, out value, out enable, out done
+
+  A -> B: start [out ID]
+
+  A -> B: block [in ID, out value]
+
+  A -> B: prepare [in ID, out enable]
+
+  B -> A: contra [in ID, in enable, out value]
+
+  B -> A: end [in ID, in value, out done]
+}

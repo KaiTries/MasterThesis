@@ -1,0 +1,19 @@
+Simple-Payment {
+  roles B, S
+  parameters out ID key, out item, out deliver
+  private payment
+  S → B: greet[out ID key]
+  B → S: order[in ID key, out item, out payment]
+  S → B: ship[in ID key, in item, in payment, out deliver]
+}
+
+Escrowed-Payment {
+  roles B, S, E
+  parameters out ID key, out item, out deliver
+  private payment
+  S → B: greet[out ID key]
+  B → S: order[in ID key, out item]
+  B → E: pay[in ID key, out payment]
+  E → S: transfer[in ID key, in payment]
+  S → B: ship[in ID key, in item, in payment, out deliver]
+}

@@ -1,0 +1,17 @@
+Flexible-Purchase {
+ roles B, S
+ parameters out ID key, out item, out shipped, out paid
+
+ B → S: rfq[out ID key, out item]
+ S → B: ship[in ID key, out shipped]
+ B → S: pay[in ID key, out paid]
+}
+
+Ship-First {
+  roles B, S
+  parameters out ID key, out item, out shipped, out paid
+
+  B → S: rfq[out ID key, out item]
+  S → B: ship[in ID key, out shipped]
+  B → S: transfer[in ID key, in shipped, out paid]
+}
