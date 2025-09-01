@@ -24,7 +24,7 @@ from .scheduler import Scheduler, exponential
 from .statistics import stats, increment
 from .jason import Environment, Agent, Actions, actions
 from .event import Event, ObservationEvent, ReceptionEvent, EmissionEvent, InitEvent
-from . import policies
+from testing import policies
 from ..protocol import Parameter
 import bspl
 from bspl.protocol import Message as MessageSchema

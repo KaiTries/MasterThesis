@@ -1,7 +1,7 @@
 import configuration
 import asyncio
-from bspl.adapter import Adapter
-from MetaAdapter import MetaAdapter
+from bspl.adapter import Adapter, MetaAdapter
+# from MetaAdapter import MetaAdapter
 from bspl.adapter.message import Message
 
 

@@ -1,8 +1,8 @@
 import configuration
 import asyncio
-from bspl.adapter import Adapter
+from bspl.adapter import Adapter, MetaAdapter
 from bspl.adapter.message import Message
-from MetaAdapter import MetaAdapter
+# from MetaAdapter import MetaAdapter
 
 NAME = "AgentB"
 SELF = [("127.0.0.1", 8002)]
