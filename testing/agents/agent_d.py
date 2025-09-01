@@ -6,15 +6,15 @@ from bspl.adapter import Adapter
 
 
 
-NAME = "AgentC"
-SELF = [("127.0.0.1", 8003)]
+NAME = "AgentD"
+SELF = [("127.0.0.1", 8004)]
 
 
-adapter = Adapter(name="AgentC", systems={}, agents={NAME: SELF}, debug=True)
+adapter = Adapter(name=NAME, systems={}, agents={NAME: SELF})
 
-@adapter.reaction(configuration.protocol.messages["TellItem"])
+@adapter.reaction("Protocol/TellItem")
 async def messageHandler(msg):
-    print(f"Received message: {msg}")
+    print(f"[AgentD] Received item message: {msg['id']} - item {msg['item']}")
     await adapter.send(
         configuration.protocol.messages["TellPrice"](
             id=msg['id'],

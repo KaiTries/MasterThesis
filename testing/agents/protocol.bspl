@@ -1,0 +1,8 @@
+Protocol {
+    roles A, B, C
+    parameters out id key, out item, out price
+
+    A -> B: GiveItem[out id key, out item]
+    B -> C: TellItem[in id key, in item]
+    C -> A: TellPrice[in id key, in item, out price]
+}

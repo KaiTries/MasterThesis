@@ -1,8 +1,8 @@
 RoleNegotiation {
     roles Initiator, Candidate
-    parameters out protocolName key, out protocolEnactment key, out proposedRole, out accept, out reject, out enactmentSpecs
+    parameters out protocolName key, out protocolEnactment key, out sender,  out proposedRole, out accept, out reject, out enactmentSpecs
 
-    Initiator -> Candidate: OfferRole[out protocolName key, out protocolEnactment key, out proposedRole]
+    Initiator -> Candidate: OfferRole[out protocolName key, out protocolEnactment key, out sender, out proposedRole]
 
     Candidate -> Initiator: Accept[in protocolName key, in protocolEnactment key, in proposedRole, out accept]
     Candidate -> Initiator: Reject[in protocolName key, in protocolEnactment key, in proposedRole, out reject]
