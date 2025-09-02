@@ -72,14 +72,14 @@ def getModel(data: str, format='turtle'):
     return Graph().parse(data=data, format=format)
 
 
-def joinWorkspace(workspace_uri, WEB_ID, AgentName):
+def joinWorkspace(workspace_uri, WEB_ID, AgentName, metadata):
     headers = {
         'X-Agent-WebID': WEB_ID,
         'X-Agent-LocalName': AgentName,
         'Content-Type': 'text/turtle'
     }
 
-    response = requests.post(workspace_uri + 'join',headers=headers)
+    response = requests.post(workspace_uri + 'join',headers=headers, data=metadata)
     g = getModel(response.text)
     artifact_address = None
     for subj in g.subjects(RDF.type, JACAMO.Body):
@@ -126,7 +126,8 @@ def updateBody(body_uri,WEB_ID, AgentName,metadata):
 ### and then parse the action and execute the request
 ### in our context it will be used to obtain a BSPL protocol
 ################################
-TD = Namespace('https://www.w3.org/2019/wot/td#')   
+TD = Namespace('https://www.w3.org/2019/wot/td#')
+HMAS = Namespace('https://purl.org/hmas/')
 HTV = Namespace("http://www.w3.org/2011/http#")
 HCTL = Namespace("https://www.w3.org/2019/wot/hypermedia#")
 JACAMO = Namespace("https://purl.org/hmas/jacamo/")
@@ -184,10 +185,15 @@ def get_kiko_adapter_target(model):
 def getAgentsIn(workspace: str, ownAddr: str):
     response = requests.get(workspace + 'artifacts/')
     containedArtifacts = getModel(response.text)
-    agents = list(containedArtifacts.subjects(RDF.type, JACAMO.Body))
+    artifacts = list(containedArtifacts.subjects(RDF.type, HMAS.Artifact))
+    agents = []
+    for artifact in artifacts:
+        if "body_" in str(artifact):
+            agents.append(str(artifact))
+
     agents_list: list[Agent] = []
     for agent in agents:
-        if str(agent) != ownAddr:
+        if agent != ownAddr:
             response = requests.get(str(agent))
             new_agent = Agent(str(agent))
             new_agent.parse_agent(response.text)

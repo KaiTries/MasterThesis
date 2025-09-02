@@ -33,13 +33,12 @@ CAPABILITIES = {"Pay":pay_message}
 REACTIONS = {"Give":give_reaction}
 
 if __name__ == '__main__':
-    success, artifact_address = joinWorkspace(BAZAAR_URI,WEB_ID=WEB_ID, AgentName=NAME)
+    success, artifact_address = joinWorkspace(BAZAAR_URI,WEB_ID=WEB_ID, AgentName=NAME, metadata=get_body_metadata())
     if not success:
         logger.error("Could not join the bazaar workspace")
         exit(1)
-    success = updateBody(artifact_address,WEB_ID=WEB_ID, AgentName=NAME,metadata=get_body_metadata(artifact_address))
-    print("Updated body metadata:", success)
     #protocol = getProtocol(BAZAAR_URI,"Buy")
+    print("my artifact address is {}".format(artifact_address))
     agents = getAgents(BAZAAR_URI, artifact_address)
     for agent in agents:
         adapter.upsert_agent(agent.name, agent.addresses)

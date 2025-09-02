@@ -3,13 +3,13 @@
 WEB_ID = 'http://localhost:8011'
 BAZAAR_URI = 'http://localhost:8080/workspaces/bazaar/'
 
-def get_body_metadata(artifact_address):
+def get_body_metadata():
     BODY_METADATA = f"""
     @prefix td: <https://www.w3.org/2019/wot/td#>.
     @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
     @prefix htv: <http://www.w3.org/2011/http#> .
 
-    <{artifact_address}> 
+    <#artifact> 
         td:hasActionAffordance [ a td:ActionAffordance;
         td:name "kikoAdapter";
         td:hasForm [
