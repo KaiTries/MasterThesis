@@ -54,11 +54,11 @@ async def give_reaction(msg):
     adapter.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
     return msg
 
-async def initiate_protocol():
+async def initiate_protocol(initial_message):
     buy_id = str(int(time.time()))
     item_id = "item123"
     money = 100
-    await adapter.send(adapter.protocols["Buy"].messages["Pay"](
+    await adapter.send(adapter.messages[initial_message](
         system="BuySystem",
         itemID=item_id,
         buyID=buy_id,
@@ -86,7 +86,7 @@ async def main():
     })
     await adapter.offer_role_for_system("BuySystem", "Seller", "bazaar_agent")
     await asyncio.sleep(5)
-    await initiate_protocol()
+    await initiate_protocol("Buy/Pay")
     await asyncio.sleep(5)
     success = leaveWorkspace(BAZAAR_URI,WEB_ID=WEB_ID,AgentName=NAME)
     pass

@@ -55,7 +55,7 @@ async def offer_role_reaction(msg):
 @adapter.reaction("Buy/Pay")
 async def give(msg):
         adapter.info(f"Received buy oder for {msg['buyID']} for a {msg['itemID']}")
-        await adapter.send(adapter.protocols["Buy"].messages["Give"](
+        await adapter.send(adapter.messages["Buy/Give"](
             item=msg['itemID'],
             **msg.payload
         )
