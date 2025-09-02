@@ -19,14 +19,16 @@ We define twoo parties:
 - decision: Logic variable to make Accept and Reject mutually exclusive
 
 ```
-ProtocolParticipation {
-    Role Initiator, Candidate
-    Parameters protocol, role, decision
+RoleNegotiation {
+    roles Initiator, Candidate
+    parameters, out protocolName key, out systemName key, out sender, out proposedRole, out accept, out reject, out enactmentSpecs
 
-    Initiator -> Candidate: OfferRole(out protocol, out role)
-    Candidate -> Initiator: Accept(in role, out decision)
-    Candidate -> Initiator: Reject(in role, out decision)
+    Initiator -> Candidate: OfferRole[out protocolName key , out systemName key, out sender, out proposedRole]
 
+    Candidate -> Initiator: Accept[in protocolName key, in systemName key, in proposedRole, out accept]
+    Candidate -> Initiator: Reject[in protocolName key, in systemName key, in proposedRole, out reject]
+
+    Initiator -> Candidate: SystemDetails[in protocolName key, in systemName key, in accept, out enactmentSpecs]
 }
 ```
 
