@@ -1,8 +1,11 @@
 @prefix td: <https://www.w3.org/2019/wot/td#>.
 @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
 @prefix htv: <http://www.w3.org/2011/http#> .
+@prefix bspl: <https://purl.org/hmas/bspl/> .
 
-<#artifact> td:hasActionAffordance [ a td:ActionAffordance;
+<#artifact>
+    bspl:hasRole ( "Seller" );
+    td:hasActionAffordance [ a td:ActionAffordance;
     td:name "kikoAdapter";
     td:hasForm [
         htv:methodName "GET";

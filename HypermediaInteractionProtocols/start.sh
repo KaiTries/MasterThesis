@@ -16,10 +16,12 @@ sleep 5
 
 cd ..
 
-python -m agents.bazaar.bazaar_agent &
+cd agents
+python bazaar_agent.py &
 BAZAAR_AGENT=$!
 
 
+cd ..
 # stop everything
 sleep 5
 read -n1 -rsp $'Press any key to stop...\n'

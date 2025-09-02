@@ -206,7 +206,9 @@ class Adapter:
 
     def upsert_agent(self, name: str, addresses: list[tuple[str, int]]) -> Agent:
         """Add or update an agent's addresses at runtime."""
-        return self.agents.upsert_agent(name, addresses)
+        agent = self.agents.upsert_agent(name, addresses)
+        self.debug(f"Upserted agent {name} with addresses {agent.addresses}")
+        return agent
 
     def reassign_role(self, system_name: str, role: str, agent_name: str):
         """Reassign a role in a system to a different agent at runtime."""

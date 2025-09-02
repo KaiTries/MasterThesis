@@ -1,15 +1,102 @@
 from rdflib.namespace import RDF
 import requests
 import bspl
-from rdflib import Graph, Namespace, Literal
+from rdflib import Graph, Namespace, Literal, URIRef, BNode
+from rdflib.collection import Collection
 from bspl.protocol import Protocol
 from bspl.adapter import Adapter
 import logging
 
 logger = logging.getLogger("agent")
 
+
+class Agent:
+    # uris
+    bspl_uri = Namespace("https://purl.org/hmas/bspl/")
+    td_uri = Namespace('https://www.w3.org/2019/wot/td#')
+
+    def __init__(self, body_uri: str):
+        self.body_uri = body_uri
+        self.name = None
+        self.addresses = []
+        self.roles = []
+        self.body: Graph = None
+
+    def parse_agent(self, body_graph: str):
+        self.body = getModel(body_graph)
+        self.set_name()
+        self.set_roles()
+        self.set_addresses()
+
+    def set_name(self):
+        # get the name of the agent
+        if self.body is None:
+            raise ValueError("Body not parsed yet")
+        name = self.body.value(subject=URIRef(self.body_uri), predicate=self.td_uri.title)
+        if name:
+            self.name = str(name)
+        return self.name
+
+    def set_roles(self):
+        if self.body is None:
+            raise ValueError("Body not parsed yet")
+        for role in self.body.objects(subject=URIRef(self.body_uri), predicate=self.bspl_uri.hasRole):
+            if isinstance(role, Literal):
+                self.roles.append(str(role))
+            elif isinstance(role, BNode):
+                for item in Collection(self.body, role):
+                    if isinstance(item, Literal):
+                        self.roles.append(str(item))
+        return self.roles
+
+    def set_addresses(self):
+        if self.body is None:
+            raise ValueError("Body not parsed yet")
+        target = get_kiko_adapter_target(self.body)
+        if target:
+            target = target.removeprefix("http://")
+            target = target.removeprefix("https://")
+            target = target.removesuffix("/")
+            target = target.split(":")
+            self.addresses.append((target[0], int(target[1]) if len(target) > 1 else 80))
+        return self.addresses
+
+    def __str__(self):
+        return f"Agent(name={self.name}, body_uri={self.body_uri}, addresses={self.addresses}, roles={self.roles})"
+
+    def __repr__(self):
+        return self.__str__()
+
+
 def getModel(data: str, format='turtle'):
     return Graph().parse(data=data, format=format)
+
+
+def joinWorkspace(workspace_uri, WEB_ID, AgentName):
+    headers = {
+        'X-Agent-WebID': WEB_ID,
+        'X-Agent-LocalName': AgentName,
+        'Content-Type': 'text/turtle'
+    }
+
+    response = requests.post(workspace_uri + 'join',headers=headers)
+    g = getModel(response.text)
+    artifact_address = None
+    for subj in g.subjects(RDF.type, JACAMO.Body):
+        artifact_address = str(subj)
+        break
+
+    return response.status_code == 200, artifact_address
+
+def leaveWorkspace(workspace_uri, WEB_ID, AgentName):
+    headers = {
+        'X-Agent-WebID': WEB_ID,
+        'X-Agent-LocalName': AgentName,
+        'Content-Type': 'text/turtle'
+    }
+
+    response = requests.post(workspace_uri + 'leave',headers=headers)
+    return response.status_code == 200
 
 def postWorkspace(workspace_uri, WEB_ID, AgentName):
     headers = {
@@ -98,25 +185,20 @@ def getAgentsIn(workspace: str, ownAddr: str):
     response = requests.get(workspace + 'artifacts/')
     containedArtifacts = getModel(response.text)
     agents = list(containedArtifacts.subjects(RDF.type, JACAMO.Body))
-    agentsList = {}
+    agents_list: list[Agent] = []
     for agent in agents:
         if str(agent) != ownAddr:
-            response = requests.get(agent)
-            target = get_kiko_adapter_target(getModel(response.text))
-            target_clean = target.removeprefix('http://').removesuffix('/').split(':')
-            agentsList[str(agent)] = (target_clean[0],int(target_clean[1]))
-    logger.info(f"Found {len(agentsList)} other agents: {agentsList}")
-    return agentsList
+            response = requests.get(str(agent))
+            new_agent = Agent(str(agent))
+            new_agent.parse_agent(response.text)
+            agents_list.append(new_agent)
 
-def getAgents(workspace, ownAddr, my_roles, me):
+    logger.info(f"Found {len(agents_list)} other agents: {agents_list}")
+    return agents_list
+
+def getAgents(workspace, ownAddr):
     agents_in_workspace = getAgentsIn(workspace=workspace, ownAddr=ownAddr)
-    agents = {}
-    for role in my_roles:
-        agents[role] = me
-
-    for agent in agents_in_workspace:
-        agents['Seller'] = agents_in_workspace[agent]
-    return agents
+    return agents_in_workspace
 
 def create_systems_for_protocol(protocol: Protocol):
     return {
