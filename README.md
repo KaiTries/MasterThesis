@@ -20,10 +20,49 @@ The buyer agent then uses the metaprotocol to dynamically instantiate a new syst
 Once the metaprotocol is finished and the system is well-formed, the buyer will initiate the buy protocol.
 
 ## Current caveats
+- Currently starting from the point where buyer agent knows the name of protocol needed to achieve goal
 - When proposing the system the agent currently just knows what role to use
 - Additional semantics are currently added to the artifacts not the agents itself
+- How to initiate the protocol, currently hardcoded reaction once the system is well-formed
+
+## What we can do
+### Dynamic role binding through role binding metaprotocol
+Introduced a universally known metaprotocol that allows agents to dynamically bind roles for any protocol.
+For this we extended the bspl adapter to be able to handle metaprotocols. Specifically we first changed the adapter 
+implementation to be able to handle addition of new protocols, systems, and agents at runtime. The meta adapter then
+additionally implements the metaprotocol logic. The meta adapter has two additional stores for proposed systems 
+and a mapping between ongoing role negotiations and proposed systems. To allow for more dynamic behavior when starting 
+a meta protocol, when an agent receives an initial message to start a role negotiation it will build the system necessary
+on the fly on his side.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant I as Initiator (MetaAdapter)
+    participant C as Candidate (MetaAdapter)
+
+    Note over I: Create system for desired protocol<br/>only own role is filled
+    Note over I: Initiate the role negotiation protocol with each candidate<br/> RoleNegotiation::<role>::<candidate>
+
+    I->>C: RoleOffer (bpsl protocol enactment through adapter)
+    Note over C: Upon receiption build meta protocol system on the fly<br/>Reasoning must be implemented by user
+
+    alt Candidate accepts
+        C-->>I: Accept (bpsl protocol enactment through adapter)
+        I->>C: SystemDetails(bspl protocol enactment through adapter)
+        Note over I,C: Only sent once all roles for the desired protocol enactment are filled <br/>→ all receivers add the system to their adapter
+    else Candidate rejects
+        C-->>I: Reject(bspl protocol enactment through adapter)
+        Note over I: (Optionally re-offer to another candidate / role)
+    end
+
+```
+Each agent must implement its reactor / handler for what to do when receiving a RoleOffer message.
 
 
+### Discovery of new protocols and agents
+Discovery is done through hypermedia traversal and with the new api of the meta adapter these newly discovered protocols
+and agents can easily be added to the adapter at runtime.
 
 
 
