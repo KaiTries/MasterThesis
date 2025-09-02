@@ -49,24 +49,10 @@ async def role_accepted_handler(msg):
         await adapter.share_system_details(proposed_system)
     return msg
 
-
-
-#####Capabilities
-def pay_message(msg: Message, buyID, itemID, money):
-    logger.info(f"Initiating buy protocol for {itemID}")
-    return msg(
-        buyID=buyID,
-        itemID=itemID,
-        money=money
-    )
-
 @adapter.reaction("Buy/Give")
 async def give_reaction(msg):
     adapter.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
     return msg
-
-CAPABILITIES = {"Pay":pay_message}
-REACTIONS = {"Give":give_reaction}
 
 async def initiate_protocol():
     buy_id = str(int(time.time()))

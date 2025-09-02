@@ -90,7 +90,6 @@ def callback():
     for agent in agents_local:
         addAgent(agent)
 
-
     return "OK", 200
 
 
