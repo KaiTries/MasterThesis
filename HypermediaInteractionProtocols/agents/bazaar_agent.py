@@ -22,9 +22,39 @@ adapter = MetaAdapter(NAME, systems={}, agents=agents, debug=True)
 logger = logging.getLogger("BazaarAgent")
 app = Flask(__name__)
 
+@adapter.reaction("RoleNegotiation/OfferRole")
+async def offer_role_reaction(msg):
+    proposed_protocol = msg['protocolName']
+    proposed_system_name = msg['systemName']
+    proposed_role = msg['proposedRole']
+    if proposed_protocol in msg.adapter.protocols:
+        adapter.info(f"Accepting role proposal: {msg}")
+        await adapter.send(
+            adapter.meta_protocol.messages["Accept"](
+                system=msg.system,
+                protocolName=msg['protocolName'],
+                systemName=msg['systemName'],
+                proposedRole=msg['proposedRole'],
+                accept=True,
+            )
+        )
+    else:
+        adapter.info(f"Rejecting role proposal: {msg}")
+        await adapter.send(
+            adapter.meta_protocol.messages["Reject"](
+                system=msg.system,
+                protocolName=msg['protocolName'],
+                systemName=msg['systemName'],
+                proposedRole=msg['proposedRole'],
+                reject=True,
+            )
+        )
+    return msg
+
+
 @adapter.reaction("Buy/Pay")
 async def give(msg):
-        print(f"Received buy oder for {msg['buyID']} for a {msg['itemID']}")
+        adapter.info(f"Received buy oder for {msg['buyID']} for a {msg['itemID']}")
         await adapter.send(adapter.protocols["Buy"].messages["Give"](
             item=msg['itemID'],
             **msg.payload
@@ -32,10 +62,19 @@ async def give(msg):
         )
         return msg
 
+@adapter.reaction("RoleNegotiation/SystemDetails")
+async def system_details_handler(msg ):
+    adapter.info(f"Received system details: {msg}")
+    system = msg['enactmentSpecs']
+    system['protocol'] = adapter.protocols[msg['protocolName']]
+    adapter.add_system(msg['systemName'],system)
+    return msg
+
+
 @app.route('/callback', methods=['POST'])
 def callback():
-    logger.info(f"Workspace changed - updating agents list")
     global adapter
+    adapter.info(f"Workspace changed - updating agents list")
     g = Graph()
     turtle_data = request.data.decode('utf-8')
     g.parse(data=turtle_data, format='turtle')
@@ -60,7 +99,7 @@ def addAgent(agent_body_url):
     new_agent = Agent(agent_body_url)
     new_agent.parse_agent(response.text)
     print(new_agent)
-    adapter.upsert_agent(agent_body_url, new_agent.addresses)
+    adapter.upsert_agent(new_agent.name, new_agent.addresses)
 
 
 
@@ -103,6 +142,8 @@ def flask_thread():
 if __name__ == '__main__':
     success = joinBazaar()
     success = setupWebsubCallback()
+    protocol = getProtocol(BAZAAR, "Buy")
+    adapter.add_protocol(protocol)
 
     # Start Flask in a background thread
     flask_t = threading.Thread(target=flask_thread, daemon=True)

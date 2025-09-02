@@ -162,7 +162,7 @@ def getProtocol(workspace, protocolName):
     form = getForm(workspace, action)
     params = createRequest(workspace, form)
     response = requests.request(**params)
-    protocol = bspl.load(response.text).export(protocolName)
+    protocol = bspl.load(response.text).protocols[protocolName]
     return protocol
 
 def get_kiko_adapter_target(model):
@@ -205,16 +205,6 @@ def getAgentsIn(workspace: str, ownAddr: str):
 def getAgents(workspace, ownAddr):
     agents_in_workspace = getAgentsIn(workspace=workspace, ownAddr=ownAddr)
     return agents_in_workspace
-
-def create_systems_for_protocol(protocol: Protocol):
-    return {
-        protocol.name.lower() : {
-            "protocol" : protocol,
-            "roles" : {
-                protocol.roles[role] : role for role in protocol.roles
-            }
-        }
-    }
 
 # Return first role that agent is capable of
 def role_capable_of(capabilities, protocol: Protocol):
