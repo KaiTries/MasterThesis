@@ -88,7 +88,7 @@ def callback():
 
 
     for agent in agents_local:
-        addAgent(agent)
+        addAgent(agent) # not necessary - if we receive roleoffer through metaprotocol, initiator is added
 
     return "OK", 200
 
