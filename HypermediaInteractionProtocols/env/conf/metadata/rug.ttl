@@ -7,8 +7,9 @@
 @prefix htv: <http://www.w3.org/2011/http#> .
 @prefix jacamo: <https://purl.org/hmas/jacamo/> .
 @prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix gr: <http://purl.org/goodrelations/v1#> .
 
-<workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact;
+<workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance;
   td:title "rug";
   td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
     ].
