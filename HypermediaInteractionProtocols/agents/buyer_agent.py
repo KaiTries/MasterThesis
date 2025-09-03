@@ -65,6 +65,13 @@ async def initiate_protocol(initial_message):
         money=money
     ))
 
+async def offer_roles(proposed_system,proposed_system_name, agents):
+    for role, agent_name in proposed_system['roles'].items():
+        if agent_name is None:
+            for agent in agents:
+                if role in agent.roles:
+                    await adapter.offer_role_for_system(proposed_system_name, role, agent.name)
+
 async def main():
     adapter.start_in_loop()
     success, artifact_address = joinWorkspace(BAZAAR_URI,WEB_ID=WEB_ID, AgentName=NAME, metadata=get_body_metadata())
@@ -73,20 +80,26 @@ async def main():
         exit(1)
     protocol = getProtocol(BAZAAR_URI,"Buy")
     adapter.add_protocol(protocol)
+
+
+
+
     agents = getAgents(BAZAAR_URI, artifact_address)
     for agent in agents:
         adapter.upsert_agent(agent.name, agent.addresses)
     await asyncio.sleep(5)
-    proposed_system = adapter.propose_system("BuySystem", {
+    system_dict = {
         "protocol": protocol,
         "roles": {
-            "Buyer": NAME,
-            "Seller": None
+        "Buyer": NAME,
+        "Seller": None
         }
-    })
-    await adapter.offer_role_for_system("BuySystem", "Seller", "bazaar_agent")
+    }
+    proposed_system_name = adapter.propose_system("BuySystem", system_dict)
+    await offer_roles(system_dict, proposed_system_name, agents)
+
     await asyncio.sleep(5)
-    if adapter.proposed_systems.get_system(proposed_system).is_well_formed():
+    if adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
         await initiate_protocol("Buy/Pay")
         await asyncio.sleep(5)
         await initiate_protocol("Buy/Pay")
