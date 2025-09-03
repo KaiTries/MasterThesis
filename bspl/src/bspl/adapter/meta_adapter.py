@@ -51,7 +51,7 @@ class MetaAdapter(Adapter):
         self.proposed_systems = SystemStore({})
         self.negotiations_proposed_systems_map: dict[str, list[Negotiation]] = {}  # map of proposed system name to negotiation system name
 
-    def propose_system(self, system_name, system_dict):
+    def propose_system(self, system_name, system_dict) -> str:
         if system_name in self.proposed_systems.systems:
             raise ValueError(f"System with name {system_name} already proposed.")
         self.proposed_systems.add_system_dict(system_name, system_dict)
