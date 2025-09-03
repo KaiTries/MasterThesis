@@ -77,7 +77,7 @@ async def main():
     for agent in agents:
         adapter.upsert_agent(agent.name, agent.addresses)
     await asyncio.sleep(5)
-    adapter.propose_system("BuySystem", {
+    proposed_system = adapter.propose_system("BuySystem", {
         "protocol": protocol,
         "roles": {
             "Buyer": NAME,
@@ -86,8 +86,13 @@ async def main():
     })
     await adapter.offer_role_for_system("BuySystem", "Seller", "bazaar_agent")
     await asyncio.sleep(5)
-    await initiate_protocol("Buy/Pay")
-    await asyncio.sleep(5)
+    if adapter.proposed_systems.get_system(proposed_system).is_well_formed():
+        await initiate_protocol("Buy/Pay")
+        await asyncio.sleep(5)
+        await initiate_protocol("Buy/Pay")
+        await asyncio.sleep(5)
+    else:
+        adapter.info("System not well-formed, cannot initiate protocol")
     success = leaveWorkspace(BAZAAR_URI,WEB_ID=WEB_ID,AgentName=NAME)
     pass
 

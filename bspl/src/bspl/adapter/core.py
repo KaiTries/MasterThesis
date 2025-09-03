@@ -178,6 +178,8 @@ class Adapter:
 
     def add_system(self, name: str, system: dict):
         """Add a new system to the adapter at runtime."""
+        if name in self.systems.systems:
+            return
         self.systems.add_system_dict(name, system)
         # Update roles
         self.roles.update(
@@ -207,7 +209,7 @@ class Adapter:
     def upsert_agent(self, name: str, addresses: list[tuple[str, int]]) -> Agent:
         """Add or update an agent's addresses at runtime."""
         agent = self.agents.upsert_agent(name, addresses)
-        self.debug(f"Upserted agent {name} with addresses {agent.addresses}")
+        self.info(f"Upserted agent {name} with addresses {agent.addresses}")
         return agent
 
     def reassign_role(self, system_name: str, role: str, agent_name: str):

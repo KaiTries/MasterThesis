@@ -31,6 +31,7 @@ async def offer_role_reaction(msg):
         adapter.info(f"Accepting role proposal: {msg}")
         await adapter.send(
             adapter.meta_protocol.messages["Accept"](
+                uuid=msg['uuid'],
                 system=msg.system,
                 protocolName=msg['protocolName'],
                 systemName=msg['systemName'],
@@ -42,6 +43,7 @@ async def offer_role_reaction(msg):
         adapter.info(f"Rejecting role proposal: {msg}")
         await adapter.send(
             adapter.meta_protocol.messages["Reject"](
+                uuid=msg['uuid'],
                 system=msg.system,
                 protocolName=msg['protocolName'],
                 systemName=msg['systemName'],

@@ -199,7 +199,6 @@ def getAgentsIn(workspace: str, ownAddr: str):
             new_agent.parse_agent(response.text)
             agents_list.append(new_agent)
 
-    logger.info(f"Found {len(agents_list)} other agents: {agents_list}")
     return agents_list
 
 def getAgents(workspace, ownAddr):
