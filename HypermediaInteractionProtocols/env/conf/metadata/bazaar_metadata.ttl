@@ -2,7 +2,6 @@
 @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
 @prefix htv: <http://www.w3.org/2011/http#> .
 @prefix gr: <http://purl.org/goodrelations/v1#> .
-@prefix bspl:   <https://purl.org/bspl#> .
 @prefix schema: <http://schema.org/> .
 @prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
