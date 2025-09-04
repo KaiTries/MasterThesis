@@ -27,6 +27,9 @@ def buildSecondSystem(protocol: dict) -> dict:
     return systemBuilder.build()
 
 async def metaProtcolTest():
+    print("======================================================")
+    print("Short demo showcasing meta-protocol usage")
+    print("======================================================")
     agent_a.adapter.start_in_loop()
     agent_b.adapter.start_in_loop()
     agent_c.adapter.start_in_loop()
@@ -36,6 +39,10 @@ async def metaProtcolTest():
     agent_b.adapter.add_protocol(configuration.protocol)
     agent_c.adapter.add_protocol(configuration.protocol)
     # agents find each other
+    print("============================================")
+    print("Agents added to each other's address books")
+    print("============================================")
+    await asyncio.sleep(1)
     agent_a.adapter.upsert_agent(agent_b.NAME, agent_b.SELF)
     agent_a.adapter.upsert_agent(agent_c.NAME, agent_c.SELF)
     agent_b.adapter.upsert_agent(agent_a.NAME, agent_a.SELF)
@@ -54,7 +61,7 @@ async def metaProtcolTest():
 
     # Agent a creates a protocol system that achieves its goals
     proposed_system = configuration.SystemBuilder(protocol_spec=configuration.protocol)
-    proposed_system.add_agent_for_role("A", "AgentA") # itself
+    proposed_system.add_agent_for_role("A", agent_a.NAME) # itself
     system_name = agent_a.adapter.propose_system("ProtocolInstanceX", proposed_system.build())
 
     # Agent a offers roles to other agents
@@ -79,6 +86,7 @@ async def timeline():
     print("======================================================")
     print("Short demo showcasing handling of dynamic environments")
     print("======================================================")
+    await asyncio.sleep(1)
 
     agent_a.adapter.start_in_loop()
     agent_b.adapter.start_in_loop()
@@ -90,6 +98,9 @@ async def timeline():
     agent_b.adapter.add_system("Protocol1", system)
     agent_c.adapter.add_system("Protocol1", system)
 
+    print("============================================")
+    print("Agents added to each other's address books")
+    print("============================================")
     agent_a.adapter.upsert_agent("AgentB", agent_b.SELF)
     agent_a.adapter.upsert_agent("AgentC", agent_c.SELF)
 
@@ -136,6 +147,16 @@ async def timeline():
 
         await asyncio.sleep(5)
 
+        print("============================================")
+        print("Shutting down all agents")
+        print("============================================")
+        await agent_a.adapter.stop()
+        await agent_b.adapter.stop()
+        await agent_d.adapter.stop()
+
+
 if __name__ == '__main__':
+    # have to run only one test at a time due to port conflicts
     # asyncio.run(timeline())
     asyncio.run(metaProtcolTest())
+

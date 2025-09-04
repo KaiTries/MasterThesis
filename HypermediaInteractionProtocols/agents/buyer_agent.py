@@ -4,6 +4,9 @@ from helpers import *
 from semantics_helper import *
 import time
 
+# =================================================================
+# Configuration
+# =================================================================
 NAME = "BuyerAgent"
 WEB_ID = 'http://localhost:8011'
 BAZAAR_URI = 'http://localhost:8080/workspaces/bazaar/'
@@ -31,6 +34,14 @@ def get_body_metadata():
     """
 
 
+# =================================================================
+# Meta Adapter Configuration
+# We need to write the reactions for role negotiation ourselves
+# since the decision is up to agent's policy
+# We do not need to write the initial message sending code
+# since it is already implemented
+# in the MetaAdapter class.
+# =================================================================
 @adapter.reaction("RoleNegotiation/Reject")
 async def reject_handler(msg: Message):
     adapter.info(f"Role negotiation rejected: {msg}")
@@ -50,17 +61,38 @@ async def role_accepted_handler(msg):
         await adapter.share_system_details(proposed_system)
     return msg
 
+# =================================================================
+# Capabilities
+# Here we write the messages that the agent can handle
+# It is possible to just bind to messages without also binding to protocols
+# e.g. just to "Give" and not "Buy/Give". TODO: not fully tested yet.
+# =================================================================
 @adapter.reaction("Buy/Give")
 async def give_reaction(msg):
     adapter.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
     return msg
 
-async def initiate_protocol(initial_message):
+# =================================================================
+# TODO: unsure if these functions should stay here
+
+# initiate_protocol function
+# Once everything is set up, we start off the protocol by sending
+# the initial message. Currently the agent just knows to use "Buy/Pay"
+# TODO: Agent should learn this from somewhere
+
+# offer_roles function
+# When we propose a system we need to offer roles to agents that can play them
+# Currently the agent gets all the present agents from the workspace and then
+# checks if they can play the role. If yes, it offers the role to them.
+# TODO: Agents advertise this in their representation as Literals <- better solution?
+# TODO: offer_roles should be part of MetaAdapter?
+# =================================================================
+async def initiate_protocol(system_id, initial_message):
     buy_id = str(int(time.time()))
     item_id = "item123"
     money = 100
     await adapter.send(adapter.messages[initial_message](
-        system="BuySystem",
+        system=system_id,
         itemID=item_id,
         buyID=buy_id,
         money=money
@@ -74,7 +106,21 @@ async def offer_roles(proposed_system,proposed_system_name, agents):
                     await adapter.offer_role_for_system(proposed_system_name, role, agent.name)
 
 
-
+# =================================================================
+# Main function - Buyer Agent Logic
+# 1. The agent joins the bazaar workspace
+# 2. The agent gets the protocol needed from goal item
+#    TODO: currently given goal item directly
+# 3. The agent adds the protocol to its known protocols (not as a system simply as a protocol)
+#    TODO: currently using a signifier exposed by the workspace that directly returns the protocols <- better solution?
+# 4. The agent gets the agents present in the workspace and adds them to its address book
+# 5. The agent proposes a system with itself as Buyer and the rest of the roles unassigned
+#    TODO: Should be part of MetaAdapter. If we have semantics that give us our role we can use that.
+# 6. The agent offers the Seller role to all agents present in the workspace that can enact it
+# 7. If the system is well-formed (i.e. all roles assigned and we shared system details) we initiate the protocol
+#    TODO: Should be part of MetaAdapter. Need info on initial message to send
+# 8. The agent leaves the workspace and shuts down
+# =================================================================
 async def main():
     adapter.start_in_loop()
     success, artifact_address = join_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME, metadata=get_body_metadata())
@@ -92,13 +138,11 @@ async def main():
     protocol = get_protocol(BAZAAR_URI, protocol_name)
     adapter.add_protocol(protocol)
 
-
-
-
     agents = get_agents(BAZAAR_URI, artifact_address)
     for agent in agents:
         adapter.upsert_agent(agent.name, agent.addresses)
     await asyncio.sleep(5)
+
     system_dict = {
         "protocol": protocol,
         "roles": {
@@ -111,9 +155,9 @@ async def main():
 
     await asyncio.sleep(5)
     if adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
-        await initiate_protocol("Buy/Pay")
+        await initiate_protocol(proposed_system_name, "Buy/Pay")
         await asyncio.sleep(5)
-        await initiate_protocol("Buy/Pay")
+        await initiate_protocol(proposed_system_name, "Buy/Pay")
         await asyncio.sleep(5)
     else:
         adapter.info("System not well-formed, cannot initiate protocol")
