@@ -29,7 +29,8 @@ async def role_proposed_handler(msg: Message):
     if proposed_protocol in msg.adapter.protocols:
         print(f"[AgentB] Accepting role proposal: {msg}")
         await adapter.send(
-            configuration.role_negotiation.messages["Accept"](
+            adapter.meta_protocol.messages["Accept"](
+                uuid=msg['uuid'],
                 system=msg.system,
                 protocolName=msg['protocolName'],
                 systemName=msg['systemName'],
@@ -40,7 +41,8 @@ async def role_proposed_handler(msg: Message):
     else:
         print(f"[AgentB] Rejecting role proposal: {msg}")
         await adapter.send(
-            configuration.role_negotiation.messages["Reject"](
+            adapter.meta_protocol.messages["Reject"](
+                uuid=msg['uuid'],
                 system=msg.system,
                 protocolName=msg['protocolName'],
                 systemName=msg['systemName'],
