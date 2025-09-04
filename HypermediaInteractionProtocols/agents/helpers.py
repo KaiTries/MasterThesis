@@ -5,10 +5,6 @@ from rdflib import Graph, Namespace, Literal, URIRef, BNode
 from rdflib.collection import Collection
 from bspl.protocol import Protocol
 from bspl.adapter import Adapter
-import logging
-
-logger = logging.getLogger("agent")
-
 
 class Agent:
     # uris
@@ -23,7 +19,7 @@ class Agent:
         self.body: Graph = None
 
     def parse_agent(self, body_graph: str):
-        self.body = getModel(body_graph)
+        self.body = get_model(body_graph)
         self.set_name()
         self.set_roles()
         self.set_addresses()
@@ -68,19 +64,14 @@ class Agent:
         return self.__str__()
 
 
-def getModel(data: str, format='turtle'):
-    return Graph().parse(data=data, format=format)
+def get_model(data: str, rdf_format='turtle'):
+    return Graph().parse(data=data, format=rdf_format)
 
 
-def joinWorkspace(workspace_uri, WEB_ID, AgentName, metadata):
-    headers = {
-        'X-Agent-WebID': WEB_ID,
-        'X-Agent-LocalName': AgentName,
-        'Content-Type': 'text/turtle'
-    }
+def join_workspace(workspace_uri, web_id, agent_name, metadata):
+    response = post_workspace(workspace_uri + 'join', web_id, agent_name, metadata)
 
-    response = requests.post(workspace_uri + 'join',headers=headers, data=metadata)
-    g = getModel(response.text)
+    g = get_model(response.text)
     artifact_address = None
     for subj in g.subjects(RDF.type, JACAMO.Body):
         artifact_address = str(subj)
@@ -88,32 +79,25 @@ def joinWorkspace(workspace_uri, WEB_ID, AgentName, metadata):
 
     return response.status_code == 200, artifact_address
 
-def leaveWorkspace(workspace_uri, WEB_ID, AgentName):
-    headers = {
-        'X-Agent-WebID': WEB_ID,
-        'X-Agent-LocalName': AgentName,
-        'Content-Type': 'text/turtle'
-    }
-
-    response = requests.post(workspace_uri + 'leave',headers=headers)
+def leave_workspace(workspace_uri, web_id, agent_name):
+    response = post_workspace(workspace_uri + 'leave', web_id, agent_name)
     return response.status_code == 200
 
-def postWorkspace(workspace_uri, WEB_ID, AgentName):
+def post_workspace(workspace_uri, web_id, agent_name, metadata=None):
     headers = {
-        'X-Agent-WebID': WEB_ID,
-        'X-Agent-LocalName': AgentName,
+        'X-Agent-WebID': web_id,
+        'X-Agent-LocalName': agent_name,
         'Content-Type': 'text/turtle'
     }
 
-    response = requests.post(workspace_uri,headers=headers)
-    return response.status_code
+    return requests.post(workspace_uri,headers=headers)
 
-def updateBody(body_uri,WEB_ID, AgentName,metadata):
+def update_body(body_uri, web_id, agent_name, metadata):
     old_representation = requests.get(body_uri).text
 
     headers = {
-        'X-Agent-WebID': WEB_ID,
-        'X-Agent-LocalName': AgentName,
+        'X-Agent-WebID': web_id,
+        'X-Agent-LocalName': agent_name,
         'Content-Type': 'text/turtle'
     }
 
@@ -133,18 +117,18 @@ HCTL = Namespace("https://www.w3.org/2019/wot/hypermedia#")
 JACAMO = Namespace("https://purl.org/hmas/jacamo/")
 
 
-def getAction(model: Graph, affordanceName: str):
+def get_action(model: Graph, affordance_name: str):
     for action in model.subjects(RDF.type, TD.ActionAffordance):
         name = model.value(action, TD.name)
-        if name == Literal(affordanceName):
-            logger.info(f"found action '{name}'")
-            print("found action", name)
+        if name == Literal(affordance_name):
             return action
+    return None
 
-def getForm(model: Graph, target_action: Graph):
+
+def get_form(model: Graph, target_action: Graph):
     return model.value(subject=target_action, predicate=TD.hasForm)
 
-def createRequest(model: Graph, form: Graph):
+def create_request(model: Graph, form: Graph):
     http_method = model.value(form, HTV.methodName)
     target_url = model.value(form, HCTL.hasTarget)
     content_type = model.value(form, HCTL.forContentType)
@@ -155,14 +139,14 @@ def createRequest(model: Graph, form: Graph):
         "headers": {"Accept": str(content_type)} if content_type else {},
     }
 
-def getProtocol(workspace, protocolName):
+def get_protocol(workspace, protocol_name):
     response = requests.get(workspace)
-    workspace = getModel(response.text)
-    action = getAction(workspace, 'getProtocol')
-    form = getForm(workspace, action)
-    params = createRequest(workspace, form)
+    workspace = get_model(response.text)
+    action = get_action(workspace, 'getProtocol')
+    form = get_form(workspace, action)
+    params = create_request(workspace, form)
     response = requests.request(**params)
-    protocol = bspl.load(response.text).protocols[protocolName]
+    protocol = bspl.load(response.text).protocols[protocol_name]
     return protocol
 
 def get_kiko_adapter_target(model):
@@ -182,10 +166,10 @@ def get_kiko_adapter_target(model):
 ### Agents that are in the same
 ### workspace as us
 ################################
-def getAgentsIn(workspace: str, ownAddr: str):
+def get_agents_in(workspace: str, own_addr: str):
     response = requests.get(workspace + 'artifacts/')
-    containedArtifacts = getModel(response.text)
-    artifacts = list(containedArtifacts.subjects(RDF.type, HMAS.Artifact))
+    contained_artifacts = get_model(response.text)
+    artifacts = list(contained_artifacts.subjects(RDF.type, HMAS.Artifact))
     agents = []
     for artifact in artifacts:
         if "body_" in str(artifact):
@@ -193,7 +177,7 @@ def getAgentsIn(workspace: str, ownAddr: str):
 
     agents_list: list[Agent] = []
     for agent in agents:
-        if agent != ownAddr:
+        if agent != own_addr:
             response = requests.get(str(agent))
             new_agent = Agent(str(agent))
             new_agent.parse_agent(response.text)
@@ -201,8 +185,8 @@ def getAgentsIn(workspace: str, ownAddr: str):
 
     return agents_list
 
-def getAgents(workspace, ownAddr):
-    agents_in_workspace = getAgentsIn(workspace=workspace, ownAddr=ownAddr)
+def get_agents(workspace, own_addr):
+    agents_in_workspace = get_agents_in(workspace=workspace, own_addr=own_addr)
     return agents_in_workspace
 
 # Return first role that agent is capable of
@@ -216,14 +200,15 @@ def role_capable_of(capabilities, protocol: Protocol):
             if message.sender == role:
                 capabilities_for_role[rname].append(message)           
 
-    for rolename, needed_capabilities in capabilities_for_role.items():
+    for role_name, needed_capabilities in capabilities_for_role.items():
         if all([a.name in capabilities for a in needed_capabilities]):
-            return rolename
+            return role_name
+    return None
 
 
 def setup_adapter(reactions, adapter: Adapter, protocol: Protocol, role):
     messages = protocol.roles[role].messages()
-    for mname, message in messages.items():
-        if mname in reactions:
-             adapter.reaction(message)(reactions[mname])
+    for m_name, message in messages.items():
+        if m_name in reactions:
+             adapter.reaction(message)(reactions[m_name])
  

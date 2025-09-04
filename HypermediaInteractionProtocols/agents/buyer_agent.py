@@ -1,12 +1,13 @@
 from bspl.adapter import MetaAdapter
 from bspl.protocol import Message
 from helpers import *
+from semantics_helper import *
 import time
 
-logger = logging.getLogger("buyer")
 NAME = "BuyerAgent"
 WEB_ID = 'http://localhost:8011'
 BAZAAR_URI = 'http://localhost:8080/workspaces/bazaar/'
+GOAL_ITEM = 'http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact'
 SELF = [('127.0.0.1',8011)]
 
 adapter = MetaAdapter(name=NAME, systems={}, agents={NAME: SELF}, debug=False)
@@ -72,19 +73,29 @@ async def offer_roles(proposed_system,proposed_system_name, agents):
                 if role in agent.roles:
                     await adapter.offer_role_for_system(proposed_system_name, role, agent.name)
 
+
+
 async def main():
     adapter.start_in_loop()
-    success, artifact_address = joinWorkspace(BAZAAR_URI,WEB_ID=WEB_ID, AgentName=NAME, metadata=get_body_metadata())
+    success, artifact_address = join_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME, metadata=get_body_metadata())
     if not success:
         adapter.logger.error("Could not join the bazaar workspace")
         exit(1)
-    protocol = getProtocol(BAZAAR_URI,"Buy")
+    adapter.info(f"Successfully joined workspace, received artifact uri - {artifact_address}")
+
+    protocol_name = get_protocol_name_from_goal(BAZAAR_URI, GOAL_ITEM)
+    if protocol_name is None:
+        adapter.logger.error(f"No protocol found for goal item {GOAL_ITEM}")
+        exit(1)
+    adapter.info(f"Found protocol {protocol_name} for goal item {GOAL_ITEM}")
+
+    protocol = get_protocol(BAZAAR_URI, protocol_name)
     adapter.add_protocol(protocol)
 
 
 
 
-    agents = getAgents(BAZAAR_URI, artifact_address)
+    agents = get_agents(BAZAAR_URI, artifact_address)
     for agent in agents:
         adapter.upsert_agent(agent.name, agent.addresses)
     await asyncio.sleep(5)
@@ -106,7 +117,7 @@ async def main():
         await asyncio.sleep(5)
     else:
         adapter.info("System not well-formed, cannot initiate protocol")
-    success = leaveWorkspace(BAZAAR_URI,WEB_ID=WEB_ID,AgentName=NAME)
+    success = leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)
     pass
 
 if __name__ == "__main__":

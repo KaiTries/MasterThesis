@@ -32,7 +32,7 @@
 <#TypeAndQuantityNode_1> a gr:TypeAndQuantityNode ;
         gr:amountOfThisGood "1.0"^^xsd:float ;
         gr:hasUnitOfMeasurement "C62"^^xsd:string ;
-        gr:typeOfGood </artifacts/rug#artifact> .
+        gr:typeOfGood <bazaar/artifacts/rug#artifact> .
 
 <#UnitPriceSpecification_1> a gr:UnitPriceSpecification ;
         gr:hasCurrency "EUR"^^xsd:string ;
@@ -40,6 +40,5 @@
         gr:hasUnitOfMeasurement "C62"^^xsd:string .
 
 <#BuyAction> a schema:BuyAction ;
-    schema:target <#Buy> .
+    schema:target "Buy" .
 
-<#Buy> a bspl:Protocol .

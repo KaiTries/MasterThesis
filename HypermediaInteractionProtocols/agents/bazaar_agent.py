@@ -143,7 +143,7 @@ def flask_thread():
 if __name__ == '__main__':
     success = joinBazaar()
     success = setupWebsubCallback()
-    protocol = getProtocol(BAZAAR, "Buy")
+    protocol = get_protocol(BAZAAR, "Buy")
     adapter.add_protocol(protocol)
 
     # Start Flask in a background thread
