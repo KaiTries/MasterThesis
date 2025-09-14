@@ -5,6 +5,11 @@ To run this demo you need to have this specific version of bspl installed in you
 cd bspl
 pip install -e .
 ```
+Move back to the root of this repo and install the other dependencies.
+```bash
+cd ..
+pip install -r requirements.txt
+```
 Then you can start the environment and the bazaar agent.
 ```bash
 cd HypermediaInteractionProtocols
