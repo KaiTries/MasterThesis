@@ -73,37 +73,17 @@ async def give_reaction(msg):
     return msg
 
 # =================================================================
-# TODO: unsure if these functions should stay here
-
-# initiate_protocol function
-# Once everything is set up, we start off the protocol by sending
-# the initial message. Currently the agent just knows to use "Buy/Pay"
+# Function that returns needed parameters to execute the first message of the buy protocol
+# Currently these mappings are known but could be found in the hypermedia space as well
 # TODO: Agent should learn this from somewhere
-
-# offer_roles function
-# When we propose a system we need to offer roles to agents that can play them
-# Currently the agent gets all the present agents from the workspace and then
-# checks if they can play the role. If yes, it offers the role to them.
-# TODO: Agents advertise this in their representation as Literals <- better solution?
-# TODO: offer_roles should be part of MetaAdapter?
 # =================================================================
-async def initiate_protocol(system_id, initial_message):
-    buy_id = str(int(time.time()))
-    item_id = "item123"
-    money = 100
-    await adapter.send(adapter.messages[initial_message](
-        system=system_id,
-        itemID=item_id,
-        buyID=buy_id,
-        money=money
-    ))
-
-async def offer_roles(proposed_system,proposed_system_name, agents):
-    for role, agent_name in proposed_system['roles'].items():
-        if agent_name is None:
-            for agent in agents:
-                if role in agent.roles:
-                    await adapter.offer_role_for_system(proposed_system_name, role, agent.name)
+def generate_buy_params(system_id: str, item_name: str, money: int):
+    return {
+        "system" : system_id,
+        "itemID" : item_name,
+        "buyID" : str(int(time.time())),
+        "money" : money
+    }
 
 
 # =================================================================
@@ -151,13 +131,14 @@ async def main():
         }
     }
     proposed_system_name = adapter.propose_system("BuySystem", system_dict)
-    await offer_roles(system_dict, proposed_system_name, agents)
+    await adapter.offer_roles(system_dict, proposed_system_name, agents)
 
     await asyncio.sleep(5)
     if adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
-        await initiate_protocol(proposed_system_name, "Buy/Pay")
         await asyncio.sleep(5)
-        await initiate_protocol(proposed_system_name, "Buy/Pay")
+        await adapter.initiate_protocol("Buy/Pay", generate_buy_params(proposed_system_name, "rug", 10))
+        await asyncio.sleep(5)
+        await adapter.initiate_protocol("Buy/Pay", generate_buy_params(proposed_system_name, "rug", 20))
         await asyncio.sleep(5)
     else:
         adapter.info("System not well-formed, cannot initiate protocol")

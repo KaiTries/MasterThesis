@@ -46,7 +46,7 @@ def callback():
 
 def add_agent(agent_body_url):
     response = requests.get(agent_body_url)
-    new_agent = Agent(agent_body_url)
+    new_agent = HypermediaAgent(agent_body_url)
     new_agent.parse_agent(response.text)
     adapter.upsert_agent(new_agent.name, new_agent.addresses)
 
@@ -74,12 +74,12 @@ def setup_websub_callback():
 # We do not need to write the initial message sending code
 # since it is already implemented
 # in the MetaAdapter class.
+#
+# This agent accepts all role offers if he knows the protocol
 # =================================================================
 @adapter.reaction("RoleNegotiation/OfferRole")
 async def offer_role_reaction(msg):
     proposed_protocol = msg['protocolName']
-    proposed_system_name = msg['systemName']
-    proposed_role = msg['proposedRole']
     if proposed_protocol in msg.adapter.protocols:
         adapter.info(f"Accepting role proposal: {msg}")
         await adapter.send(

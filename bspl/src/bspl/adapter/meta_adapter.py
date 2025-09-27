@@ -79,6 +79,17 @@ class MetaAdapter(Adapter):
             )
             await self.send(msg)
 
+
+    async def initiate_protocol(self, initial_message, params: dict):
+        await self.send(self.messages[initial_message](**params))
+
+    async def offer_roles(self, proposed_system, proposed_system_name, agents):
+        for role, agent_name in proposed_system['roles'].items():
+            if agent_name is None:
+                for agent in agents:
+                    if role in agent.roles:
+                        await self.offer_role_for_system(proposed_system_name, role, agent.name)
+
     async def offer_role_for_system(self, system_name, role, candidate):
         meta_protocol_system = get_system_for_meta_protocol(self.name, candidate)
         meta_protocol_system_name = f"RoleNegotiation::{role}::{candidate}"

@@ -6,7 +6,7 @@ from rdflib.collection import Collection
 from bspl.protocol import Protocol
 from bspl.adapter import Adapter
 
-class Agent:
+class HypermediaAgent:
     # uris
     bspl_uri = Namespace("https://purl.org/hmas/bspl/")
     td_uri = Namespace('https://www.w3.org/2019/wot/td#')
@@ -175,11 +175,11 @@ def get_agents_in(workspace: str, own_addr: str):
         if "body_" in str(artifact):
             agents.append(str(artifact))
 
-    agents_list: list[Agent] = []
+    agents_list: list[HypermediaAgent] = []
     for agent in agents:
         if agent != own_addr:
             response = requests.get(str(agent))
-            new_agent = Agent(str(agent))
+            new_agent = HypermediaAgent(str(agent))
             new_agent.parse_agent(response.text)
             agents_list.append(new_agent)
 

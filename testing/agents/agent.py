@@ -1,5 +1,4 @@
-from MetaAdapter import MetaAdapter
-
+from bspl.adapter import MetaAdapter
 
 
 class Agent:
@@ -9,7 +8,7 @@ class Agent:
         self.adapter = MetaAdapter(name=name, systems={}, agents={name: addresses})
 
     async def offer_role(self):
-        await self.adapter.offer_role()
+        await self.adapter.offer_roles()
 
 
 
