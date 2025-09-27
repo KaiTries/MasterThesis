@@ -139,10 +139,11 @@ def create_request(model: Graph, form: Graph):
         "headers": {"Accept": str(content_type)} if content_type else {},
     }
 
+
 def get_protocol(workspace, protocol_name):
     response = requests.get(workspace)
     workspace = get_model(response.text)
-    action = get_action(workspace, 'getProtocol')
+    action = get_action(workspace, 'getInteractionProtocolSpecifications')
     form = get_form(workspace, action)
     params = create_request(workspace, form)
     response = requests.request(**params)

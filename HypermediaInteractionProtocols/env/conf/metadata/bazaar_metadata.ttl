@@ -13,7 +13,7 @@
  gr:legalName "bazaar.com Ltd."^^xsd:string ;
  gr:offers <#RugOffer> ;
  td:hasActionAffordance [ a td:ActionAffordance;
-    td:name "getProtocol";
+    td:name "getInteractionProtocolSpecifications";
     td:hasForm [
         htv:methodName "GET";
         hctl:hasTarget <http://localhost:8005/protocol>;
