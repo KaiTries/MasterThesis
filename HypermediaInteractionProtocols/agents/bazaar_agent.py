@@ -48,6 +48,9 @@ def add_agent(agent_body_url):
     response = requests.get(agent_body_url)
     new_agent = HypermediaAgent(agent_body_url)
     new_agent.parse_agent(response.text)
+    if new_agent.name is None or len(new_agent.addresses) == 0:
+        print("Agent Description not complete, not adding to known agents")
+        return
     adapter.upsert_agent(new_agent.name, new_agent.addresses)
 
 def setup_websub_callback():
@@ -154,7 +157,7 @@ def joinBazaar():
 if __name__ == '__main__':
     success = joinBazaar()
     success = setup_websub_callback()
-    protocol = get_protocol(BAZAAR, "Buy")
+    protocol = get_protocol(BAZAAR)
     adapter.add_protocol(protocol)
 
     # Start Flask in a background thread

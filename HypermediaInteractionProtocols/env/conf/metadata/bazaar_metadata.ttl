@@ -19,11 +19,12 @@
         gr:hasCurrencyValue 200.0;
         gr:hasUnitOfMeasurement "C62";
     ];
-    gr:includesObject [ a gr:TypeAndQuantityNode;
-    gr:amountOfThisGood 1.0;
-    gr:hasUnitOfMeasurement "C62";
-    gr:typeOfGood <workspaces/bazaar/artifacts/rug#artifact>;
-    ];
+    gr:includesObject [
+        a gr:TypeAndQuantityNode;
+        gr:amountOfThisGood 1.0;
+        gr:hasUnitOfMeasurement "C62";
+        gr:typeOfGood <bazaar/artifacts/rug#artifact>;
+        ];
     ];
 
 bspl:protocol <http://localhost:8005/protocol> .

@@ -8,11 +8,13 @@
 @prefix jacamo: <https://purl.org/hmas/jacamo/> .
 @prefix td: <https://www.w3.org/2019/wot/td#> .
 @prefix gr: <http://purl.org/goodrelations/v1#> .
+@prefix bspl: <https://purl.org/hmas/bspl/> .
 
 <workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance;
   td:title "rug";
   td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
-    ].
+    ];
+  bspl:useProtocol "Buy".
 
 <workspaces/bazaar/artifacts/rug> a hmas:ResourceProfile;
   hmas:isProfileOf <workspaces/bazaar/artifacts/rug#artifact> .

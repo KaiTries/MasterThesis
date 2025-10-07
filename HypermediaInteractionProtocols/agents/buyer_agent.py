@@ -23,7 +23,7 @@ def get_body_metadata():
 
     <#artifact> 
         td:hasActionAffordance [ a td:ActionAffordance;
-        td:name "kikoAdapter";
+        td:name "sendMessage";
         td:hasForm [
             htv:methodName "GET";
             hctl:hasTarget <http://127.0.0.1:8011/>;
@@ -106,12 +106,16 @@ async def main():
     success, artifact_address = join_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME, metadata=get_body_metadata())
     if not success:
         adapter.logger.error("Could not join the bazaar workspace")
+        success = leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)
+        adapter.info(f"Left bazaar workspace - {success}")
         exit(1)
     adapter.info(f"Successfully joined workspace, received artifact uri - {artifact_address}")
 
     protocol_name = get_protocol_name_from_goal(BAZAAR_URI, GOAL_ITEM)
     if protocol_name is None:
         adapter.logger.error(f"No protocol found for goal item {GOAL_ITEM}")
+        leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)
+        adapter.info(f"Left bazaar workspace - {success}")
         exit(1)
     adapter.info(f"Found protocol {protocol_name} for goal item {GOAL_ITEM}")
 
