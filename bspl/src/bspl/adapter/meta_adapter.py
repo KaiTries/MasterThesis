@@ -1,3 +1,5 @@
+from bspl.protocol import Message, Protocol
+
 from .core import Adapter
 from .system_store import SystemStore, System
 from .. import load
@@ -46,10 +48,117 @@ class Negotiation:
 class MetaAdapter(Adapter):
     meta_protocol = role_negotiation
 
-    def __init__(self, name, systems=None, agents=None, debug=False):
+    def __init__(self, name, systems=None, agents=None, capabilities=None, debug=False):
         super().__init__(name=name, systems=systems, agents=agents, debug=debug)
+        if capabilities is None:
+            capabilities = set()
         self.proposed_systems = SystemStore({})
         self.negotiations_proposed_systems_map: dict[str, list[Negotiation]] = {}  # map of proposed system name to negotiation system name
+        self.capabilities = capabilities
+        self.capable_roles = set()
+        self.setup_generic_meta_protocol_handlers()
+
+    ########################################################
+    ##########  Meta Protocol Generic Handlers    ##########
+    ########################################################
+    def reject_handler(self):
+        """
+        When a Candidate rejects a role offer this function is called
+        """
+        async def _reject_handler(msg: Message):
+            candidate = msg.meta['system'].split("::")[-1]
+            # TODO: Need better way to handle reactors correctly
+            if candidate == self.name:
+                self.info(f"candidate does not need to react to own reject message!")
+                return msg
+            self.info(f"Role negotiation rejected: {msg}")
+            return msg
+        return _reject_handler
+
+    def accept_handler(self):
+        """
+        When a Candidate accepts a role offer this function is called
+        """
+        async def _accept_handler(msg: Message):
+            candidate = msg.meta['system'].split("::")[-1]
+            # TODO: Need better way to handle reactors correctly
+            if candidate == self.name:
+                self.info(f"candidate does not need to react to own accept message!")
+                return msg
+            self.info(f"Role proposal accepted by {candidate}")
+            proposed_system = msg['systemName']
+            system = self.proposed_systems.get_system(proposed_system)
+            system.roles[msg['proposedRole']] = candidate
+
+            if system.is_well_formed():
+                self.info(f"System {proposed_system} is well-formed with roles {system.roles}, sharing details")
+                self.add_system(proposed_system, system.to_dict())
+                await self.share_system_details(proposed_system)
+            return msg
+        return _accept_handler
+
+    def role_proposal_handler(self):
+        """
+        When a Candidate receives a role offer this function is called
+        Currently accepts a role if we are capable
+        """
+        async def _role_proposal_handler(msg: Message):
+            candidate = msg.meta['system'].split("::")[-1]
+            # TODO: Need better way to handle reactors correctly
+            if candidate != self.name:
+                self.info(f"Initiator doesnt answer own message!")
+                return msg
+            proposed_role = msg['proposedRole']
+            if proposed_role in self.capable_roles:
+                self.info(f"Accepting role proposal: {msg}")
+                await self.send(
+                    self.meta_protocol.messages["Accept"](
+                        uuid=msg['uuid'],
+                        system=msg.system,
+                        protocolName=msg['protocolName'],
+                        systemName=msg['systemName'],
+                        proposedRole=msg['proposedRole'],
+                        accept=True,
+                    )
+                )
+            else:
+                self.info(f"Rejecting role proposal: {msg}")
+                await self.send(
+                    self.meta_protocol.messages["Reject"](
+                        uuid=msg['uuid'],
+                        system=msg.system,
+                        protocolName=msg['protocolName'],
+                        systemName=msg['systemName'],
+                        proposedRole=msg['proposedRole'],
+                        reject=True,
+                    )
+                )
+            return msg
+        return _role_proposal_handler
+
+    def system_details_handler(self):
+        """
+        When a candidate receives a system details message this function is called
+        """
+        async def _system_details_handler(msg: Message):
+            candidate = msg.meta['system'].split("::")[-1]
+            # TODO: Need better way to handle reactors correctly
+            if candidate != self.name:
+                self.info(f"Initiator already knows system details")
+                return msg
+            self.info(f"Received system details: {msg}")
+            system = msg['enactmentSpecs']
+            system['protocol'] = self.protocols[msg['protocolName']]
+            self.add_system(msg['systemName'], system)
+            return msg
+
+        return _system_details_handler
+
+    def setup_generic_meta_protocol_handlers(self):
+        self.reactors["RoleNegotiation/Reject"] = [self.reject_handler()]
+        self.reactors["RoleNegotiation/Accept"] = [self.accept_handler()]
+        self.reactors["RoleNegotiation/OfferRole"] = [self.role_proposal_handler()]
+        self.reactors["RoleNegotiation/SystemDetails"] = [self.system_details_handler()]
 
     def propose_system(self, system_name, system_dict) -> str:
         if system_name in self.proposed_systems.systems:
@@ -128,3 +237,30 @@ class MetaAdapter(Adapter):
                 self.add_system(sys_id, new_system)
 
         await super().receive(data)
+
+    def add_protocol(self, protocol: Protocol):
+        """Add a new protocol to the adapter at runtime."""
+        if protocol.name not in self.protocols:
+            self.protocols[protocol.name] = protocol
+            self.inject(protocol)
+            for message in protocol.messages.values():
+                self.messages[message.qualified_name] = message
+            self.check_capable_roles(protocol)
+        else:
+            self.warning(f"Protocol {protocol.name} already exists in adapter.")
+
+
+    def check_capable_roles(self, protocol: Protocol):
+        roles = protocol.roles
+        capabilities_for_role = {}
+        for rname, role in roles.items():
+            capabilities_for_role[rname] = []
+            messages = role.messages()
+            for mname, message in messages.items():
+                if message.sender == role:
+                    capabilities_for_role[rname].append(message)
+
+        for role_name, needed_capabilities in capabilities_for_role.items():
+            if all([a.name in self.capabilities for a in needed_capabilities]):
+                self.capable_roles.add(role_name)
+        self.info(f"Capable roles: {', '.join(self.capable_roles)}")

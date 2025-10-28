@@ -11,9 +11,9 @@ HMAS_AGENT = 'https://purl.org/hmas/Agent'
 BAZAAR = 'http://localhost:8080/workspaces/bazaar'
 
 ME = [('127.0.0.1',8010)]
-NAME = "BazaarAgent"
+NAME = "bazaar_agent"
 agents = {NAME : ME}
-adapter = MetaAdapter(NAME, systems={}, agents=agents, debug=True)
+adapter = MetaAdapter(NAME, systems={}, agents=agents, debug=True, capabilities={"Give",})
 
 # =================================================================
 # Flask app for WebSub callback
@@ -68,54 +68,6 @@ def setup_websub_callback():
 
     response = requests.post(request_url, json=payload)
     return response.status_code
-
-
-# =================================================================
-# Meta Adapter Configuration
-# We need to write the reactions for role negotiation ourselves
-# since the decision is up to agent's policy
-# We do not need to write the initial message sending code
-# since it is already implemented
-# in the MetaAdapter class.
-#
-# This agent accepts all role offers if he knows the protocol
-# =================================================================
-@adapter.reaction("RoleNegotiation/OfferRole")
-async def offer_role_reaction(msg):
-    proposed_protocol = msg['protocolName']
-    if proposed_protocol in msg.adapter.protocols:
-        adapter.info(f"Accepting role proposal: {msg}")
-        await adapter.send(
-            adapter.meta_protocol.messages["Accept"](
-                uuid=msg['uuid'],
-                system=msg.system,
-                protocolName=msg['protocolName'],
-                systemName=msg['systemName'],
-                proposedRole=msg['proposedRole'],
-                accept=True,
-            )
-        )
-    else:
-        adapter.info(f"Rejecting role proposal: {msg}")
-        await adapter.send(
-            adapter.meta_protocol.messages["Reject"](
-                uuid=msg['uuid'],
-                system=msg.system,
-                protocolName=msg['protocolName'],
-                systemName=msg['systemName'],
-                proposedRole=msg['proposedRole'],
-                reject=True,
-            )
-        )
-    return msg
-
-@adapter.reaction("RoleNegotiation/SystemDetails")
-async def system_details_handler(msg ):
-    adapter.info(f"Received system details: {msg}")
-    system = msg['enactmentSpecs']
-    system['protocol'] = adapter.protocols[msg['protocolName']]
-    adapter.add_system(msg['systemName'],system)
-    return msg
 
 
 # =================================================================

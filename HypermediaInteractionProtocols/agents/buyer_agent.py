@@ -13,7 +13,7 @@ BAZAAR_URI = 'http://localhost:8080/workspaces/bazaar/'
 GOAL_ITEM = 'http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact'
 SELF = [('127.0.0.1',8011)]
 
-adapter = MetaAdapter(name=NAME, systems={}, agents={NAME: SELF}, debug=False)
+adapter = MetaAdapter(name=NAME, systems={}, agents={NAME: SELF}, capabilities={"Pay",}, debug=False)
 
 def get_body_metadata():
     return f"""
@@ -32,34 +32,6 @@ def get_body_metadata():
         ]
     ].
     """
-
-
-# =================================================================
-# Meta Adapter Configuration
-# We need to write the reactions for role negotiation ourselves
-# since the decision is up to agent's policy
-# We do not need to write the initial message sending code
-# since it is already implemented
-# in the MetaAdapter class.
-# =================================================================
-@adapter.reaction("RoleNegotiation/Reject")
-async def reject_handler(msg: Message):
-    adapter.info(f"Role negotiation rejected: {msg}")
-    return msg
-
-@adapter.reaction("RoleNegotiation/Accept")
-async def role_accepted_handler(msg):
-    adapter.info(f"Role proposal accepted: {msg}")
-    candidate = msg.meta['system'].split("::")[-1]
-    proposed_system = msg['systemName']
-    system = adapter.proposed_systems.get_system(proposed_system)
-    system.roles[msg['proposedRole']] = candidate
-
-    if system.is_well_formed():
-        adapter.info(f"System {proposed_system} is well-formed with roles {system.roles}, sharing details")
-        adapter.add_system(proposed_system, system.to_dict())
-        await adapter.share_system_details(proposed_system)
-    return msg
 
 # =================================================================
 # Capabilities
@@ -136,6 +108,11 @@ async def main():
     }
     proposed_system_name = adapter.propose_system("BuySystem", system_dict)
     await adapter.offer_roles(system_dict, proposed_system_name, agents)
+
+    # TODO: avoid infinite loop when all candidate reject
+    # while not adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
+    #  adapter.info("System not well-formed, cannot initiate protocol")
+    #   await asyncio.sleep(5)
 
     await asyncio.sleep(5)
     if adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
