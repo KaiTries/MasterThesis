@@ -33,12 +33,16 @@ def get_body_metadata():
     ].
     """
 
+
+
+
 # =================================================================
 # Capabilities
 # Here we write the messages that the agent can handle
 # It is possible to just bind to messages without also binding to protocols
 # e.g. just to "Give" and not "Buy/Give". TODO: not fully tested yet.
 # =================================================================
+#TODO: fix adapter.enabled to also work with string identifiers
 @adapter.reaction("Buy/Give")
 async def give_reaction(msg):
     adapter.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
@@ -83,7 +87,7 @@ async def main():
         exit(1)
     adapter.info(f"Successfully joined workspace, received artifact uri - {artifact_address}")
 
-    protocol_name = get_protocol_name_from_goal(BAZAAR_URI, GOAL_ITEM)
+    protocol_name = get_protocol_name_from_goal_two(BAZAAR_URI, GOAL_ITEM)
     if protocol_name is None:
         adapter.logger.error(f"No protocol found for goal item {GOAL_ITEM}")
         leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)

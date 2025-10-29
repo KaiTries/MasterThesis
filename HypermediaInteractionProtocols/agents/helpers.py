@@ -2,9 +2,6 @@ from rdflib.namespace import RDF
 import requests
 import bspl
 from rdflib import Graph, Namespace, Literal, URIRef, BNode
-from rdflib.collection import Collection
-from bspl.protocol import Protocol
-from bspl.adapter import Adapter
 
 class HypermediaAgent:
     # uris
@@ -219,27 +216,3 @@ def get_agents_in(workspace: str, own_addr: str):
 def get_agents(workspace, own_addr):
     agents_in_workspace = get_agents_in(workspace=workspace, own_addr=own_addr)
     return agents_in_workspace
-
-# Return first role that agent is capable of
-def role_capable_of(capabilities, protocol: Protocol):
-    roles = protocol.roles
-    capabilities_for_role = {}
-    for rname, role in roles.items():
-        capabilities_for_role[rname] = []
-        messages = role.messages()
-        for mname, message in messages.items():
-            if message.sender == role:
-                capabilities_for_role[rname].append(message)           
-
-    for role_name, needed_capabilities in capabilities_for_role.items():
-        if all([a.name in capabilities for a in needed_capabilities]):
-            return role_name
-    return None
-
-
-def setup_adapter(reactions, adapter: Adapter, protocol: Protocol, role):
-    messages = protocol.roles[role].messages()
-    for m_name, message in messages.items():
-        if m_name in reactions:
-             adapter.reaction(message)(reactions[m_name])
- 

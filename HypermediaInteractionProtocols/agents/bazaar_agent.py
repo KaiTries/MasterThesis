@@ -1,19 +1,67 @@
+import asyncio
+
 from flask import Flask, request, jsonify
 from bspl.adapter import Adapter, MetaAdapter
 import threading
 from helpers import *
 
+JACAMO_BODY = 'https://purl.org/hmas/jacamo/Body'
+HMAS_AGENT = 'https://purl.org/hmas/Agent'
+
 # =================================================================
 # Configuration
 # =================================================================
-JACAMO_BODY = 'https://purl.org/hmas/jacamo/Body'
-HMAS_AGENT = 'https://purl.org/hmas/Agent'
-BAZAAR = 'http://localhost:8080/workspaces/bazaar'
+BAZAAR = 'http://localhost:8080/workspaces/bazaar/'
+WEB_ID = 'http://localhost:8010'
+ADAPTER_ENDPOINT = 8010
+CAPABILITIES = {"Give",}
 
-ME = [('127.0.0.1',8010)]
+ME = [('127.0.0.1',ADAPTER_ENDPOINT)]
 NAME = "bazaar_agent"
 agents = {NAME : ME}
-adapter = MetaAdapter(NAME, systems={}, agents=agents, debug=True, capabilities={"Give",})
+adapter = MetaAdapter(NAME, systems={}, agents=agents, debug=True, capabilities=CAPABILITIES)
+
+def get_body_metadata(adapter_endpoint: str):
+    return f"""
+    @prefix td: <https://www.w3.org/2019/wot/td#>.
+    @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+    @prefix htv: <http://www.w3.org/2011/http#> .
+
+    <#artifact> 
+        td:hasActionAffordance [ a td:ActionAffordance;
+        td:name "sendMessage";
+        td:hasForm [
+            htv:methodName "GET";
+            hctl:hasTarget <http://127.0.0.1:{adapter_endpoint}/>;
+            hctl:forContentType "text/plain";
+            hctl:hasOperationType td:invokeAction;
+        ]
+    ].
+    """
+
+
+def role_rdf(artifact_address: str, role_names: list[str], protocol_name: str) -> str:
+    """
+    Generate RDF for a list of roles associated with a given protocol name.
+    """
+    # Generate RDF blocks for each role
+    roles_rdf = "\n".join(
+        f"""        [
+                a bspl:Role ;
+                bspl:roleName "{role}" ;
+                bspl:protocolName "{protocol_name}" ;
+            ]"""
+        for role in role_names
+    )
+    # Combine everything into the final RDF string
+    rdf_output = f"""@prefix bspl: <https://purl.org/hmas/bspl/> .
+
+    <{artifact_address}>
+        bspl:hasRole 
+    {roles_rdf} .
+    """
+    return rdf_output
+
 
 # =================================================================
 # Flask app for WebSub callback
@@ -99,18 +147,21 @@ async def give(msg):
 # 3. Add the Buy protocol to the adapter
 # 4. Start Flask in a background thread to handle WebSub callbacks
 # 5. Start the adapter to listen for incoming messages
-
-# This agent will just sit idle in the bazaar and if someone wants to buy something, it can sell it to them.
-# This is achieved through dynamic role binding via the meta protocol and then the agents capability.
-# =================================================================
-def joinBazaar():
-    return True
-
 if __name__ == '__main__':
-    success = joinBazaar()
+    code, address = join_workspace(BAZAAR, web_id=WEB_ID, agent_name=NAME, metadata=get_body_metadata(str(ADAPTER_ENDPOINT)))
+    if not code:
+        adapter.logger.error("Could not join the bazaar workspace")
+        success = leave_workspace(BAZAAR, web_id=WEB_ID, agent_name=NAME)
+        adapter.info(f"Left bazaar workspace - {code}")
+        exit(1)
+
+
     success = setup_websub_callback()
     protocol = get_protocol(BAZAAR)
-    adapter.add_protocol(protocol)
+    new_roles = adapter.add_protocol(protocol)
+
+    roles_rdf = role_rdf(address, new_roles, protocol.name)
+    response = update_body(address, web_id=WEB_ID, agent_name=NAME, metadata=roles_rdf)
 
     # Start Flask in a background thread
     flask_t = threading.Thread(target=flask_thread, daemon=True)

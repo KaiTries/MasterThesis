@@ -11,7 +11,16 @@
     {
       "name" : "bazaar_agent",
       "agent-uri" : "http://localhost:8081",
-      "callback-uri" : "http://localhost:8081/callback"
+      "callback-uri" : "http://localhost:8081/callback",
+      "body-config" : [
+        {
+          "metadata" : "conf/metadata/bazaar_agent_metadata.ttl",
+          "join" : [ "bazaar"]
+        },
+        {
+          "metadata" : "conf/metadata/bazaar_agent_metadata.ttl"
+        }
+      ]
     },
     {
       "name" : "supermarket_agent",
@@ -41,9 +50,13 @@
         "artifacts" : [
           {
             "name" : "rug",
-            "representation" : "conf/metadata/rug.ttl"
+            "representation" : "conf/metadata/rug.ttl",
+            "created-by" : "bazaar_agent"
           }
-          ]
+        ],
+        "joined-by" : [
+          "bazaar_agent"
+        ]
       },
       {
         "name" : "supermarket",

@@ -245,7 +245,7 @@ class MetaAdapter(Adapter):
             self.inject(protocol)
             for message in protocol.messages.values():
                 self.messages[message.qualified_name] = message
-            self.check_capable_roles(protocol)
+            return self.check_capable_roles(protocol)
         else:
             self.warning(f"Protocol {protocol.name} already exists in adapter.")
 
@@ -259,8 +259,10 @@ class MetaAdapter(Adapter):
             for mname, message in messages.items():
                 if message.sender == role:
                     capabilities_for_role[rname].append(message)
-
+        roles_capable = set()
         for role_name, needed_capabilities in capabilities_for_role.items():
             if all([a.name in self.capabilities for a in needed_capabilities]):
+                roles_capable.add(role_name)
                 self.capable_roles.add(role_name)
         self.info(f"Capable roles: {', '.join(self.capable_roles)}")
+        return roles_capable

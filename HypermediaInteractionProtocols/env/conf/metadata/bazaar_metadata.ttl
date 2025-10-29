@@ -14,6 +14,7 @@
  gr:legalName "bazaar.com Ltd."^^xsd:string ;
  gr:offers [ a gr:Offering;
     gr:hasBusinessFunction gr:Sell;
+    bspl:useProtocol "Buy";
     gr:hasPriceSpecification [ a gr:UnitPriceSpecification;
         gr:hasCurrency "EUR";
         gr:hasCurrencyValue 200.0;
@@ -27,4 +28,4 @@
         ];
     ];
 
-bspl:protocol <http://localhost:8005/protocol> .
+bspl:protocol <http://localhost:8005/protocols/buy_protocol> .

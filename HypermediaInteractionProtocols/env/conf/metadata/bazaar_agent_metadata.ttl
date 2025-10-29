@@ -17,5 +17,3 @@
         hctl:hasOperationType td:invokeAction;
     ]
 ].
-
-
