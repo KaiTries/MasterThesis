@@ -109,7 +109,8 @@ class MetaAdapter(Adapter):
                 self.info(f"Initiator doesnt answer own message!")
                 return msg
             proposed_role = msg['proposedRole']
-            if proposed_role in self.capable_roles:
+            protocol_name = msg['protocolName']
+            if proposed_role in self.capable_roles and protocol_name in self.protocols:
                 self.info(f"Accepting role proposal: {msg}")
                 await self.send(
                     self.meta_protocol.messages["Accept"](

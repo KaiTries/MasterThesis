@@ -292,7 +292,13 @@ class Adapter:
         # Flatten the list of message copies from prep
         all_prepared = []
         for m in messages:
-            if not self.history.is_duplicate(m):
+            try:
+                is_dup = self.history.is_duplicate(m)
+            except Exception as e:
+                self.warning(f"Integrity conflict when checking duplicate for {m}: {e}")
+                increment("dups")
+                continue
+            if not is_dup:
                 prepared = prep(m)
                 all_prepared.extend(prepared)
         emissions = set(all_prepared)
@@ -347,6 +353,8 @@ class Adapter:
         Handle emission/reception of message by invoking corresponding reactors.
         """
         reactors = self.reactors.get(message.schema.qualified_name)
+        if not reactors:
+            reactors = self.reactors.get(message.schema.name)
         if reactors:
             for r in reactors:
                 message.adapter = self
@@ -372,6 +380,65 @@ class Adapter:
         else:
             self.generators[schemas] = [handler]
 
+
+    def _resolve_schema2(self, msg_name:str, message: Message):
+        msg = self.messages.get(msg_name)
+        if msg is None:
+            for message in self.messages:
+                print("msg is none:", message.schema.name)
+            print("msg is none:", message.schema.qualified_name)
+            print(self.messages)
+            if message.schema.name == msg_name:
+                msg = self.messages[message.schema.qualified_name]
+
+        print("test", msg_name ,self.messages.get(msg_name))
+        return msg
+
+    def _resolve_schema(self, s, context_system=None):
+        """
+        Resolve a schema key (qualified_name or schema object) to a schema object.
+
+        - If s is already a schema object, return it.
+        - If s is a string, try exact qualified-name lookup.
+        - If not found, try to find messages whose short name (after the last '/') equals s.
+          If context_system is given, prefer matches whose qualified name starts with
+          '<context_system>/' to disambiguate.
+        - If multiple matches remain, log a warning and return None.
+        """
+        # Already a schema object
+        if not isinstance(s, str):
+            return s
+
+        # Exact qualified-name lookup
+        if s in self.messages:
+            return self.messages[s]
+
+        # Collect candidates by short name
+        short = s.split("/")[-1]
+        candidates = [m for k, m in self.messages.items() if k.split("/")[-1] == short]
+
+        if not candidates:
+            self.warning(f"Unknown schema name: {s}")
+            return None
+
+        # If context_system provided, prefer candidates from that system (qualified_name starts with '<system>/')
+        if context_system:
+            pref = [m for m in candidates if m.qualified_name.startswith(f"{context_system}/")]
+            if len(pref) == 1:
+                return pref[0]
+            elif len(pref) > 1:
+                self.warning(f"Ambiguous schema {s} in system {context_system}: {[m.qualified_name for m in pref]}")
+                return None
+
+        # If only one candidate globally, return it
+        if len(candidates) == 1:
+            return candidates[0]
+
+        # Ambiguous across systems — warn and skip
+        self.warning(f"Ambiguous schema name {s}; candidates: {[m.qualified_name for m in candidates]}")
+        return None
+
+
     async def handle_enabled(self, message):
         """
         Handle newly observed message by checking for newly enabled messages.
@@ -385,7 +452,8 @@ class Adapter:
         Note: sending a message triggers the loop again
         """
         for tup in self.generators.keys():
-            for group in zip(*(schema.match(message) for schema in tup)):
+            resolved_schemas = [self._resolve_schema(s, message) for s in tup if self._resolve_schema(s, message) is not None]
+            for group in zip(*(schema.match(message) for schema in resolved_schemas)):
                 for handler in self.generators[tup]:
                     partials = [m.partial() for m in group]
                     # assume it returns only one message for now

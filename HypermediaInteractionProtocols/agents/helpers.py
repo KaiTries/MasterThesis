@@ -216,3 +216,45 @@ def get_agents_in(workspace: str, own_addr: str):
 def get_agents(workspace, own_addr):
     agents_in_workspace = get_agents_in(workspace=workspace, own_addr=own_addr)
     return agents_in_workspace
+
+
+def get_body_metadata(adapter_endpoint: str):
+    return f"""
+    @prefix td: <https://www.w3.org/2019/wot/td#>.
+    @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+    @prefix htv: <http://www.w3.org/2011/http#> .
+
+    <#artifact> 
+        td:hasActionAffordance [ a td:ActionAffordance;
+        td:name "sendMessage";
+        td:hasForm [
+            htv:methodName "GET";
+            hctl:hasTarget <http://127.0.0.1:{adapter_endpoint}/>;
+            hctl:forContentType "text/plain";
+            hctl:hasOperationType td:invokeAction;
+        ]
+    ].
+    """
+
+
+def body_role_metadata(artifact_address: str, role_names: list[str], protocol_name: str) -> str:
+    """
+    Generate RDF for a list of roles associated with a given protocol name.
+    """
+    # Generate RDF blocks for each role
+    roles_rdf = "\n".join(
+        f"""        [
+                a bspl:Role ;
+                bspl:roleName "{role}" ;
+                bspl:protocolName "{protocol_name}" ;
+            ]"""
+        for role in role_names
+    )
+    # Combine everything into the final RDF string
+    rdf_output = f"""@prefix bspl: <https://purl.org/hmas/bspl/> .
+
+    <{artifact_address}>
+        bspl:hasRole 
+    {roles_rdf} .
+    """
+    return rdf_output
