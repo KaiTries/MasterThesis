@@ -1,25 +1,36 @@
 # Interaction Protocol and Hypermedia based Multi-Agent Systems
 
-This project presents a novel approach to building autonomous multi-agent systems that combine **BSPL (Blindingly Simple Protocol Language) interaction protocols** with **hypermedia-driven discovery** and **dynamic role binding**. The system enables agents to autonomously discover their environment, negotiate roles, and collaborate through formally specified protocols without requiring centralized coordination.
+This project presents a novel approach to building **fully autonomous multi-agent systems** that combine **BSPL (Blindingly Simple Protocol Language) interaction protocols** with **semantic hypermedia-driven discovery** and **autonomous role reasoning**. The system enables agents to autonomously discover their environment, reason about which roles to take, and collaborate through formally specified protocols—all without requiring centralized coordination or hardcoded knowledge.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Key Concepts](#key-concepts)
 - [Architecture](#architecture)
+- [Autonomy Levels](#autonomy-levels)
 - [Getting Started](#getting-started)
-- [Building Agents with MetaAdapter](#building-agents-with-metaadapter)
+- [Building Fully Autonomous Agents](#building-fully-autonomous-agents)
 - [Demo Scenario](#demo-scenario)
 - [Project Structure](#project-structure)
+- [Documentation](#documentation)
 
 ## Overview
 
-Traditional multi-agent systems often rely on hardcoded agent configurations or centralized orchestration. This project introduces a decentralized approach where:
+Traditional multi-agent systems often rely on hardcoded agent configurations or centralized orchestration. This project introduces a **fully decentralized, autonomous approach** where:
 
-- **Agents discover protocols and other agents** through hypermedia traversal (using W3C Thing Descriptions)
+- **Agents discover workspaces** by semantically crawling from a base URL - no hardcoded paths
+- **Agents discover artifacts** by their semantic class (e.g., `ex:Rug`) - no exact URIs needed
+- **Agents discover protocols** through hypermedia traversal from goal artifacts
+- **Agents reason about roles** based on their goals and capabilities - no hardcoded role names
 - **Dynamic role negotiation** allows agents to form systems at runtime through a universal metaprotocol
 - **Protocol compliance** is ensured through BSPL formal specifications
-- **Hypermedia affordances** guide agent interactions and enable autonomous behavior
+- **Hypermedia affordances** guide all agent interactions
+
+### What Makes This Unique
+
+**True Autonomy Through Semantic Reasoning:**
+- Agents only need to know: (1) where to start, (2) what type of thing they want, (3) what they want to do with it, (4) what they can do
+- Everything else—workspace location, exact artifact URI, protocol, which role to take—is discovered and reasoned autonomously
 
 The system is particularly suited for scenarios requiring flexible, decentralized coordination between autonomous agents, such as e-commerce transactions, supply chain coordination, or any multi-party business process.
 
@@ -45,15 +56,78 @@ Buy {
 
 BSPL ensures protocols are **enactable**, **dead-lock free**, and **information-safe** through formal verification.
 
-### MetaAdapter
+### HypermediaMetaAdapter
 
-The `MetaAdapter` is an extension of the base BSPL `Adapter` that adds:
+The `HypermediaMetaAdapter` is a unified abstraction that combines BSPL protocol enactment with autonomous hypermedia discovery and semantic reasoning:
 
-1. **Dynamic Protocol Management**: Add new protocols at runtime
-2. **Dynamic System Formation**: Create protocol enactments with agents discovered at runtime
-3. **Role Negotiation**: Built-in metaprotocol for proposing and accepting roles
-4. **Capability-Based Role Matching**: Automatically determine which roles an agent can enact
-5. **Agent Discovery Integration**: Add and manage agent addresses dynamically
+**Core Capabilities:**
+1. **Class-Based Workspace Discovery** - Find workspaces containing artifacts by semantic class
+2. **Semantic Role Reasoning** - Automatically determine which role to take based on goals and capabilities
+3. **Dynamic Protocol Management** - Add new protocols at runtime
+4. **Dynamic System Formation** - Create protocol enactments with agents discovered at runtime
+5. **Role Negotiation** - Built-in metaprotocol for proposing and accepting roles
+6. **Capability-Based Matching** - Validate role compatibility with agent capabilities
+
+### Semantic Role Reasoning
+
+**The Innovation:** Agents reason about which role to take based on semantic metadata, eliminating hardcoded role names.
+
+**How It Works:**
+```python
+# Agent only knows its goal and capabilities
+adapter = HypermediaMetaAdapter(
+    goal_type="http://purl.org/goodrelations/v1#Buy",  # I want to acquire
+    capabilities={"Pay"}  # I can pay
+)
+
+# Agent reasons its role automatically
+my_role = adapter.reason_my_role(protocol)  # Returns: "Buyer"
+```
+
+**Role Semantics** (in protocol metadata):
+```turtle
+<BuyerRole>
+    bspl:hasGoal gr:Buy ;              # This role is for acquiring
+    bspl:requiresCapability "Pay" ;    # Requires Pay capability
+
+<SellerRole>
+    bspl:hasGoal gr:Sell ;             # This role is for providing
+    bspl:requiresCapability "Give" ;   # Requires Give capability
+```
+
+**Benefits:**
+- ✅ No hardcoded role names
+- ✅ Same agent code works for different goals (buy vs sell)
+- ✅ Protocol-agnostic (works across different protocols)
+- ✅ Self-validating (won't take incompatible roles)
+
+### Class-Based Artifact Discovery
+
+**The Innovation:** Agents discover artifacts by their semantic type, not exact URIs.
+
+**Traditional Approach (Brittle):**
+```python
+# Agent needs exact path - breaks if artifact moves
+artifact = "http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact"
+```
+
+**Semantic Approach (Autonomous):**
+```python
+# Agent only knows the type - finds any matching artifact
+goal_artifact_class = "http://example.org/Rug"
+```
+
+**Discovery Process:**
+1. Start at base URI (e.g., `http://localhost:8080/`)
+2. Crawl through workspaces using hypermedia links
+3. Query each workspace for artifacts of the semantic class
+4. Return workspace + artifact when found
+
+**Benefits:**
+- ✅ No hardcoded URIs or paths
+- ✅ Works if artifacts move between workspaces
+- ✅ Finds any artifact matching the semantic type
+- ✅ True hypermedia-driven navigation (HATEOAS)
 
 ### Role Negotiation Metaprotocol
 
@@ -69,7 +143,7 @@ sequenceDiagram
     Note over I: Initiate role negotiation with candidates
 
     I->>C: OfferRole
-    Note over C: Upon reception, build metaprotocol system<br/>Reasoning must be implemented by user
+    Note over C: Upon reception, build metaprotocol system<br/>Reasoning based on goal + capabilities
 
     alt Candidate accepts
         C-->>I: Accept
@@ -81,27 +155,18 @@ sequenceDiagram
     end
 ```
 
-### Hypermedia-Driven Discovery
-
-Agents use **semantic hypermedia** (W3C Thing Descriptions) to discover everything they need:
-- **Workspaces** through autonomous crawling from a base URL (NEW!)
-- **Other agents** in the environment and their capabilities
-- **Protocols** needed for specific goals (linked from resources)
-- **Endpoints** for communication with other agents
-- **Roles** that agents can enact
-
-**Example:** An agent starting with only `http://localhost:8080/` can autonomously crawl through workspaces to find the one containing its goal artifact, then join that workspace and complete its task - all without hardcoded paths!
-
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │                 Agent Application                   │
 ├─────────────────────────────────────────────────────┤
-│              MetaAdapter Layer                      │
+│         HypermediaMetaAdapter Layer                 │
+│  • Semantic Role Reasoning (NEW!)                   │
+│  • Class-Based Discovery (NEW!)                     │
+│  • Workspace Discovery                              │
 │  • Role Negotiation                                 │
 │  • Dynamic System Management                        │
-│  • Capability Matching                              │
 ├─────────────────────────────────────────────────────┤
 │              Base Adapter Layer                     │
 │  • Protocol Enactment                               │
@@ -115,6 +180,21 @@ Agents use **semantic hypermedia** (W3C Thing Descriptions) to discover everythi
          ↕                        ↕
   [Other Agents]          [Hypermedia Environment]
 ```
+
+## Autonomy Levels
+
+The system demonstrates **progressive autonomy** through four levels:
+
+| Level | Agent Knows | Agent Discovers | Autonomy |
+|-------|-------------|-----------------|----------|
+| **1. Hardcoded** | Workspace path + Artifact URI + Role name | Nothing | ⭐️ |
+| **2. URI Discovery** | Base + Artifact URI + Role name | Workspace location | ⭐️⭐️ |
+| **3. Class Discovery** | Base + Artifact class + Role name | Workspace + Artifact URI | ⭐️⭐️⭐️ |
+| **4. Full Autonomy** | **Base + Artifact class + Goal** | **Workspace + Artifact + Role** | **⭐️⭐️⭐️⭐️⭐️** |
+
+**Level 4** represents full autonomy - the agent only needs high-level goals and capabilities, discovering everything else through semantic reasoning.
+
+See [AUTONOMY_EVOLUTION.md](HypermediaInteractionProtocols/agents/AUTONOMY_EVOLUTION.md) for detailed progression.
 
 ## Getting Started
 
@@ -148,339 +228,118 @@ cd bspl
 pip install -e .
 ```
 
-## Building Agents with MetaAdapter
+## Building Fully Autonomous Agents
 
-You have two approaches for building agents:
+### The Recommended Approach: Full Autonomy
 
-1. **HypermediaMetaAdapter** (Recommended) - Unified adapter with integrated hypermedia capabilities
-2. **MetaAdapter + HypermediaTools** - Manual coordination for more control
-
-### Approach 1: HypermediaMetaAdapter (Recommended)
-
-The `HypermediaMetaAdapter` combines BSPL protocol enactment with hypermedia discovery in a single, cohesive abstraction. This is the recommended approach for new agents.
-
-**Quick Example (with Workspace Discovery):**
+Create agents that discover and reason about everything autonomously:
 
 ```python
 from HypermediaMetaAdapter import HypermediaMetaAdapter
+import asyncio
 
-# Agent discovers workspace autonomously!
+# Agent configuration - only high-level goals!
 adapter = HypermediaMetaAdapter(
     name="BuyerAgent",
-    base_uri="http://localhost:8080/",  # Just the entry point
-    goal_artifact_uri="http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact",
+
+    # Discovery: Find workspace + artifact by semantic class
+    base_uri="http://localhost:8080/",           # Just the entry point
+    goal_artifact_class="http://example.org/Rug", # Semantic type (not exact URI!)
+    auto_discover_workspace=True,
+
+    # Role Reasoning: Determine role from goal + capabilities
+    goal_type="http://purl.org/goodrelations/v1#Buy",  # What I want to do
+    capabilities={"Pay"},                              # What I can do
+    auto_reason_role=True,                             # Reason my role!
+
     web_id="http://localhost:8011",
     adapter_endpoint="8011",
-    capabilities={"Pay"},
-    auto_discover_workspace=True,  # Crawls to find workspace
-    auto_join=True  # Automatically joins discovered workspace
+    auto_join=True
 )
 
 # Define message handler
 @adapter.reaction("Give")
 async def handle_give(msg):
-    adapter.info(f"Received item: {msg['item']}")
+    adapter.info(f"✓ Received item: {msg['item']}")
     return msg
 
-# High-level workflow
+# Autonomous workflow
 async def main():
     adapter.start_in_loop()
 
-    # One method does: discover protocol, agents, propose system, negotiate roles
+    # Discover protocol from discovered artifact
+    protocol = adapter.discover_protocol_for_goal(adapter.goal_artifact_uri)
+
+    # Reason which role to take (not hardcoded!)
+    my_role = adapter.reason_my_role(protocol)  # Returns: "Buyer"
+
+    # Propose system with reasoned role
     system_name = await adapter.discover_and_propose_system(
-        protocol_name="Buy",
+        protocol_name=protocol.name,
         system_name="BuySystem",
-        my_role="Buyer",
-        goal_item_uri="http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact"
+        my_role=my_role  # ← Reasoned, not hardcoded!
     )
 
-    # Built-in waiting for system formation
+    # Wait for system formation and execute
     if await adapter.wait_for_system_formation(system_name, timeout=10.0):
-        await adapter.initiate_protocol("Buy/Pay", {...})
+        await adapter.initiate_protocol("Buy/Pay", {
+            "system": system_name,
+            "buyID": "order_123",
+            "itemID": "rug",
+            "money": 100
+        })
 
     adapter.leave_workspace()
-```
-
-**Key Benefits:**
-- 🚀 **~42% less code** compared to manual approach
-- 🔍 **Workspace discovery** through autonomous crawling (NEW!)
-- ✨ **Automatic workspace management** (join/leave)
-- 🔎 **Built-in discovery methods** for agents and protocols
-- 🎯 **High-level workflows** that handle multiple steps
-- 🛡️ **Context manager support** for automatic cleanup
-- 📚 **Cleaner, more maintainable code**
-
-See:
-- [REFACTORING_GUIDE.md](HypermediaInteractionProtocols/agents/REFACTORING_GUIDE.md) - Migration guide
-- [WORKSPACE_DISCOVERY.md](HypermediaInteractionProtocols/agents/WORKSPACE_DISCOVERY.md) - Autonomous workspace crawling (NEW!)
-
-### Approach 2: MetaAdapter + HypermediaTools (Manual)
-
-This approach gives you fine-grained control by manually coordinating between `MetaAdapter` and `HypermediaTools`. Use this when you need precise control over each step.
-
-This tutorial demonstrates how to build autonomous agents using the `MetaAdapter` class. We'll use the buyer and seller agents from the demo as reference.
-
-### Step 1: Initialize Your Agent
-
-```python
-from bspl.adapter import MetaAdapter
-
-# Configuration
-NAME = "MyAgent"
-ENDPOINT_PORT = 8011
-SELF = [('127.0.0.1', ENDPOINT_PORT)]
-
-# Define what messages your agent can send (capabilities)
-# Capabilities are message names that your agent implements
-capabilities = {"Pay", "AcceptOrder"}  # Example capabilities
-
-# Create the MetaAdapter
-adapter = MetaAdapter(
-    name=NAME,
-    systems={},  # Start with no systems (add dynamically)
-    agents={NAME: SELF},  # Start with only self in address book
-    capabilities=capabilities,
-    debug=False
-)
-```
-
-### Step 2: Define Message Handlers (Capabilities)
-
-Message handlers react to incoming messages. Use the `@adapter.reaction()` decorator:
-
-```python
-@adapter.reaction("Give")
-async def handle_give_message(msg):
-    """Handle incoming Give messages from the Buy protocol"""
-    adapter.info(f"Received item: {msg['item']}")
-    adapter.info(f"Order {msg['buyID']} completed!")
-    return msg
-```
-
-You can also define **enabled message generators** that automatically bind parameters when messages become enabled:
-
-```python
-@adapter.enabled("Buy/Give")
-async def auto_send_give(msg):
-    """Automatically send Give when enabled after receiving Pay"""
-    adapter.info(f"Received payment for {msg['itemID']}")
-    # Bind the 'item' parameter
-    return msg.bind(item=msg['itemID'])
-```
-
-### Step 3: Add Protocols Dynamically
-
-Once you discover a protocol (e.g., from hypermedia), add it to your adapter:
-
-```python
-import bspl
-
-# Load protocol from string or file
-protocol_string = """
-Buy {
-  roles Buyer, Seller
-  parameters out buyID key, out itemID key, out item, out money
-
-  Buyer -> Seller: Pay[out buyID key, out itemID key, out money]
-  Seller -> Buyer: Give[in buyID key, in itemID key, in money, out item]
-}
-"""
-
-# Parse and add protocol
-spec = bspl.load(protocol_string)
-protocol = spec.protocols['Buy']
-adapter.add_protocol(protocol)
-
-# The adapter automatically determines which roles you can enact
-# based on your declared capabilities
-```
-
-### Step 4: Discover and Add Other Agents
-
-```python
-from helpers import get_agents
-
-# Get agents from hypermedia environment
-agents = get_agents(workspace_url, own_artifact_address)
-
-# Add discovered agents to address book
-for agent in agents:
-    adapter.upsert_agent(agent.name, agent.addresses)
-```
-
-### Step 5: Propose a System and Negotiate Roles
-
-```python
-# Define the system you want to create
-system_dict = {
-    "protocol": protocol,
-    "roles": {
-        "Buyer": NAME,        # Your agent takes Buyer role
-        "Seller": None        # Seller role to be negotiated
-    }
-}
-
-# Propose the system (internal tracking)
-proposed_system_name = adapter.propose_system("BuySystem_1", system_dict)
-
-# Offer roles to discovered agents
-await adapter.offer_roles(system_dict, proposed_system_name, agents)
-```
-
-The metaprotocol handles the negotiation automatically:
-- Candidates with matching capabilities will accept
-- When all roles are filled, all agents receive system details
-- The system becomes ready for protocol enactment
-
-### Step 6: Initiate Protocol Messages
-
-```python
-import asyncio
-
-# Wait for the system to be well-formed (all roles filled)
-await asyncio.sleep(5)  # Or implement proper waiting logic
-
-if adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
-    # Create message parameters
-    params = {
-        "system": proposed_system_name,
-        "buyID": "order_123",
-        "itemID": "rug",
-        "money": 100
-    }
-
-    # Initiate the protocol
-    await adapter.initiate_protocol("Buy/Pay", params)
-else:
-    adapter.info("System not well-formed, cannot initiate protocol")
-```
-
-### Step 7: Start the Adapter
-
-```python
-# Start in existing event loop (non-blocking)
-async def main():
-    adapter.start_in_loop()
-    # Your agent logic here
-    # ...
 
 asyncio.run(main())
-
-# OR start with dedicated event loop (blocking)
-if __name__ == "__main__":
-    adapter.start()
 ```
 
-### Complete Agent Example
+### What the Agent Discovers Autonomously
 
-Here's a minimal working seller agent:
+1. ✅ **Workspace location** - Crawls from base URI to find workspace containing rug
+2. ✅ **Artifact URI** - Queries workspaces for artifacts of class `ex:Rug`
+3. ✅ **Protocol** - Discovers Buy protocol linked from the rug artifact
+4. ✅ **Role to take** - Reasons it should be "Buyer" (goal=Buy, capability=Pay)
+5. ✅ **Other agents** - Discovers seller agent in workspace
+6. ✅ **System formation** - Negotiates roles and forms enactable system
 
-```python
-from bspl.adapter import MetaAdapter
-import bspl
+### Key Benefits
 
-# Configuration
-NAME = "SellerAgent"
-SELF = [('127.0.0.1', 8010)]
-capabilities = {"Give"}
+- 🎯 **~42% less code** compared to manual approach
+- 🤖 **True autonomy** - no hardcoded URIs or role names
+- 🔍 **Semantic discovery** - finds resources by meaning, not path
+- 🧠 **Intelligent reasoning** - determines appropriate roles automatically
+- 🔄 **Flexible & reusable** - same code works for different goals
+- ✨ **Production-ready** - comprehensive error handling and logging
 
-# Create adapter
-adapter = MetaAdapter(
-    name=NAME,
-    systems={},
-    agents={NAME: SELF},
-    capabilities=capabilities,
-    debug=True
-)
+### Example Agents
 
-# Define capability
-@adapter.enabled("Buy/Give")
-async def send_give(msg):
-    adapter.info(f"Received order for {msg['itemID']}, sending item...")
-    return msg.bind(item=msg['itemID'])
+See these complete examples:
 
-# Main logic
-async def main():
-    # Load protocol
-    protocol_str = """
-    Buy {
-      roles Buyer, Seller
-      parameters out buyID key, out itemID key, out item, out money
-      Buyer -> Seller: Pay[out buyID key, out itemID key, out money]
-      Seller -> Buyer: Give[in buyID key, in itemID key, in money, out item]
-    }
-    """
-    spec = bspl.load(protocol_str)
-    adapter.add_protocol(spec.protocols['Buy'])
-
-    # Start adapter
-    adapter.start_in_loop()
-
-    # Agent stays alive and handles incoming messages
-    while True:
-        await asyncio.sleep(1)
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
-```
-
-### Advanced Features
-
-**Custom Role Proposal Handling:**
-
-The MetaAdapter has default handlers for role negotiation, but you can override them:
-
-```python
-# Override the default role proposal handler
-@adapter.reaction("RoleNegotiation/OfferRole")
-async def custom_role_handler(msg):
-    proposed_role = msg['proposedRole']
-    protocol_name = msg['protocolName']
-
-    # Custom logic to decide acceptance
-    if should_accept(proposed_role, protocol_name):
-        await adapter.send(
-            adapter.meta_protocol.messages["Accept"](
-                uuid=msg['uuid'],
-                system=msg.system,
-                protocolName=msg['protocolName'],
-                systemName=msg['systemName'],
-                proposedRole=msg['proposedRole'],
-                accept=True
-            )
-        )
-    else:
-        # Send reject...
-        pass
-    return msg
-```
-
-**Accessing System Information:**
-
-```python
-# Get a specific system
-system = adapter.systems.get_system("BuySystem_1")
-print(f"Roles: {system.roles}")
-print(f"Protocol: {system.protocol.name}")
-
-# Check if system is well-formed
-if system.is_well_formed():
-    adapter.info("All roles assigned!")
-
-# Access proposed systems (during negotiation)
-proposed = adapter.proposed_systems.get_system(proposed_system_name)
-```
+- **`buyer_agent_with_role_reasoning.py`** - Full autonomy (Level 4) ⭐ **RECOMMENDED**
+- **`buyer_agent_auto_discovery.py`** - Class-based discovery (Level 3)
+- **`buyer_agent_with_discovery.py`** - URI-based discovery (Level 2)
+- **`buyer_agent_refactored.py`** - Hardcoded (Level 1)
 
 ## Demo Scenario
 
 ### Motivating Scenario
 
-> AI-Agents browsing the web is a common occurrence nowadays and a vital functionality for these agents is
-> to be able to conduct transactions. Therefore, our scenario is a simple but illustrative buy scenario, where
-> a user agent will have the goal to buy a specific item - _a rug_. The user agent will then autonomously discover its
-> environment and through interactions with other agents buy the wanted item for the user. The user agent does this with initial knowledge
-> of only an **entrypoint**, an identifier for the **wanted item** and basic capabilities to respond to **buy specific messages**.
+> An AI agent needs to purchase an item (a rug) in a decentralized marketplace. The agent starts with minimal knowledge:
+> - An entry point URL (`http://localhost:8080/`)
+> - The semantic type of item wanted (`ex:Rug`)
+> - Its goal (`gr:Buy` - to acquire/purchase)
+> - Its capabilities (`Pay` - can send payment)
+>
+> From just this information, the agent autonomously:
+> 1. Discovers which workspace contains rugs
+> 2. Finds the specific rug artifact
+> 3. Discovers the Buy protocol
+> 4. Reasons it should take the Buyer role
+> 5. Finds and negotiates with a seller
+> 6. Completes the purchase
+
+This demonstrates **true autonomous behavior** - the agent navigates and reasons using only semantic information.
 
 ### How to Run the Demo
 
@@ -493,159 +352,201 @@ cd HypermediaInteractionProtocols
 
 This starts:
 - **Yggdrasil** (hypermedia environment on port 8080)
+- **Protocol Server** (serves protocol metadata on port 8005)
 - **Bazaar Agent** (seller agent on port 8010)
 
-2. Open a new terminal and start the buyer agent:
+2. Open a new terminal and start the fully autonomous buyer agent:
 
 ```bash
 cd HypermediaInteractionProtocols/agents
-python buyer_agent.py
+python buyer_agent_with_role_reasoning.py
 ```
 
 ### What Happens in the Demo
 
-1. **Buyer joins workspace**: The buyer agent joins the bazaar workspace through hypermedia
-2. **Protocol discovery**: Buyer discovers the Buy protocol linked from the goal item (rug)
-3. **Agent discovery**: Buyer discovers the bazaar agent (seller) in the workspace
-4. **Protocol addition**: Buyer adds the Buy protocol and determines it can enact the "Buyer" role (has "Pay" capability)
-5. **System proposal**: Buyer proposes a system with itself as Buyer and Seller role unfilled
-6. **Role negotiation**: Buyer offers the Seller role to the bazaar agent via the metaprotocol
-7. **Role acceptance**: Bazaar agent accepts (has "Give" capability)
-8. **System formation**: Once all roles are filled, both agents receive system details
-9. **Protocol enactment**: Buyer initiates the Buy protocol by sending Pay message
-10. **Transaction completion**: Seller responds with Give message, completing the transaction
+**Discovery Phase:**
+1. **Workspace Discovery**: Agent crawls from `http://localhost:8080/` to find workspace containing `ex:Rug`
+2. **Artifact Discovery**: Agent queries workspace and finds the rug artifact URI
+3. **Protocol Discovery**: Agent discovers Buy protocol linked from the rug
+4. **Agent Discovery**: Agent finds bazaar_agent (seller) in workspace
+
+**Reasoning Phase:**
+5. **Role Reasoning**: Agent reasons it should be "Buyer" based on goal (`gr:Buy`) and capability (`Pay`)
+6. **Role Validation**: Agent validates it has required capabilities for Buyer role
+
+**Collaboration Phase:**
+7. **System Proposal**: Agent proposes Buy system with itself as Buyer
+8. **Role Negotiation**: Agent offers Seller role to bazaar_agent via metaprotocol
+9. **Role Acceptance**: Bazaar agent accepts (has `Give` capability for Seller role)
+10. **System Formation**: Both agents receive system details and finalize binding
+
+**Execution Phase:**
+11. **Protocol Enactment**: Buyer initiates by sending Pay message
+12. **Transaction Completion**: Seller responds with Give message
+13. **Cleanup**: Buyer leaves workspace
 
 **Console Output** shows:
-- Agent joining/leaving workspace
-- Protocol and agent discovery
+- Workspace discovery progress (crawling, querying)
+- Artifact discovery (finding rug by semantic class)
+- Role reasoning steps (goal matching, capability validation)
 - Role negotiation messages
 - Protocol messages (Pay/Give)
 - Transaction completion
 
-### Demo Implementation Details
-
-**Buyer Agent** (HypermediaInteractionProtocols/agents/buyer_agent.py:1-134):
-- Joins workspace via hypermedia
-- Discovers Buy protocol from goal item semantics
-- Discovers and adds other agents
-- Proposes system and negotiates roles
-- Initiates the Buy protocol
-
-**Bazaar/Seller Agent** (HypermediaInteractionProtocols/agents/bazaar_agent.py:1-137):
-- Registers with workspace on startup
-- Adds Buy protocol and advertises "Seller" role capability
-- Responds to role offers via default metaprotocol handler
-- Automatically sends Give message when Pay is received (enabled message generator)
-
 ### Key Features Demonstrated
+
+#### Semantic Role Reasoning
+
+Agents determine which role to take based on:
+- **Goal alignment**: Role's purpose matches agent's goal
+- **Capability matching**: Agent has required capabilities
+- **Automatic validation**: Incompatible roles rejected
+
+No hardcoded role names needed!
+
+#### Class-Based Discovery
+
+Agents find artifacts by semantic type:
+- **Type-based search**: Query by `ex:Rug`, not exact URI
+- **Workspace crawling**: Autonomous navigation through hierarchy
+- **Hypermedia-driven**: Pure HATEOAS navigation
+
+No hardcoded paths needed!
 
 #### Dynamic Role Binding
 
-The metaprotocol allows agents to form systems without prior coordination:
+The metaprotocol enables flexible collaboration:
 - **Decentralized**: No central authority assigns roles
-- **Flexible**: Agents can join/leave systems dynamically
-- **Capability-based**: Agents accept roles based on their advertised capabilities
+- **Goal-driven**: Agents accept roles that match their goals
+- **Capability-validated**: Roles rejected if capabilities missing
 - **Protocol-agnostic**: Works with any BSPL protocol
-
-#### Hypermedia-Driven Discovery
-
-Agents discover everything they need through hypermedia:
-- **Protocols**: Linked from goal items using semantic annotations
-- **Agents**: Discovered by traversing workspace artifacts
-- **Capabilities**: Agents advertise their roles in Thing Descriptions
-- **Endpoints**: Communication addresses discovered from action affordances
 
 #### Protocol Compliance
 
-BSPL ensures correct protocol execution:
+BSPL ensures correct execution:
 - **Message ordering**: Only enabled messages can be sent
-- **Parameter flow**: Information flows correctly between messages
-- **Integrity checking**: Duplicate/invalid messages are rejected
-- **Deadlock freedom**: Protocols are verified to be enactable
+- **Parameter flow**: Information flows correctly
+- **Integrity checking**: Invalid messages rejected
+- **Deadlock freedom**: Protocols verified to be enactable
 
 ## Project Structure
 
 ```
 MasterThesis/
-├── README.md
+├── README.md                      # This file
 ├── requirements.txt
 │
-├── bspl/                           # BSPL core library
+├── bspl/                          # BSPL core library
 │   ├── src/bspl/
 │   │   ├── adapter/
-│   │   │   ├── core.py            # Base Adapter class
+│   │   │   ├── core.py            # Base Adapter
 │   │   │   ├── meta_adapter.py    # MetaAdapter with role negotiation
-│   │   │   ├── system_store.py    # System management
-│   │   │   ├── agent_store.py     # Agent address book
-│   │   │   ├── receiver.py        # Message reception
-│   │   │   ├── emitter.py         # Message emission
 │   │   │   └── ...
-│   │   ├── protocol.py            # Protocol, Message, Role classes
-│   │   ├── parsers/               # BSPL parser
+│   │   ├── protocol.py            # Protocol classes
 │   │   └── verification/          # Protocol verification
-│   ├── scenarios/                 # Example BSPL scenarios
 │   └── samples/                   # Sample BSPL protocols
 │
-├── HypermediaInteractionProtocols/ # Demo implementation
+├── HypermediaInteractionProtocols/ # Implementation
 │   ├── agents/
-│   │   ├── HypermediaMetaAdapter.py      # Unified adapter (RECOMMENDED)
-│   │   ├── HypermediaTools.py            # Hypermedia utility library
-│   │   ├── buyer_agent_refactored.py     # Buyer using HypermediaMetaAdapter
-│   │   ├── bazaar_agent_refactored.py    # Seller using HypermediaMetaAdapter
-│   │   ├── buyer_agent.py                # Original buyer (MetaAdapter)
-│   │   ├── bazaar_agent.py               # Original seller (MetaAdapter)
-│   │   ├── helpers.py                    # Legacy utilities
-│   │   ├── semantics_helper.py           # Legacy semantic helpers
-│   │   └── REFACTORING_GUIDE.md          # Migration guide
+│   │   ├── HypermediaMetaAdapter.py           # Unified adapter ⭐
+│   │   ├── HypermediaTools.py                 # Discovery & reasoning utilities
+│   │   │
+│   │   ├── buyer_agent_with_role_reasoning.py # Level 4: Full autonomy ⭐
+│   │   ├── buyer_agent_auto_discovery.py      # Level 3: Class discovery
+│   │   ├── buyer_agent_with_discovery.py      # Level 2: URI discovery
+│   │   ├── buyer_agent_refactored.py          # Level 1: Hardcoded
+│   │   │
+│   │   ├── bazaar_agent.py                    # Seller agent
+│   │   │
+│   │   ├── test_role_reasoning.py             # Role reasoning tests
+│   │   ├── test_workspace_discovery.py        # Discovery tests
+│   │   │
+│   │   └── [Documentation files - see below]
+│   │
 │   ├── env/
 │   │   ├── protocols/
-│   │   │   └── buy.bspl          # Buy protocol specification
-│   │   └── yggdrasil-*.jar       # Hypermedia environment
-│   └── start.sh                   # Startup script
+│   │   │   ├── buy.bspl                       # Buy protocol spec
+│   │   │   └── protocol.py                    # Protocol server (with role semantics)
+│   │   ├── conf/metadata/                     # Semantic metadata
+│   │   │   ├── rug.ttl                        # Rug artifact (with ex:Rug class)
+│   │   │   └── ...
+│   │   └── yggdrasil-*.jar                    # Hypermedia environment
+│   │
+│   └── start.sh                               # Startup script
 │
 └── yggdrasil/                     # Hypermedia environment source
 ```
 
-### Core Components
+## Documentation
 
-**HypermediaMetaAdapter** (`HypermediaInteractionProtocols/agents/HypermediaMetaAdapter.py`) ⭐ **RECOMMENDED**
-- Unified adapter combining BSPL and hypermedia
-- Automatic workspace management (join/leave)
-- Built-in discovery methods (agents, protocols, goals)
-- High-level workflow methods
-- Context manager support for cleanup
-- ~42% less code for typical agents
+### Guides
 
-**MetaAdapter** (`bspl/src/bspl/adapter/meta_adapter.py:48-269`)
-- Extends base Adapter with dynamic capabilities
-- Implements role negotiation metaprotocol
-- Manages proposed systems and negotiations
-- Capability-based role matching
+- **[AUTONOMY_EVOLUTION.md](HypermediaInteractionProtocols/agents/AUTONOMY_EVOLUTION.md)** - Progression from hardcoded to fully autonomous
+- **[CLASS_BASED_DISCOVERY.md](HypermediaInteractionProtocols/agents/CLASS_BASED_DISCOVERY.md)** - Semantic artifact discovery guide
+- **[ROLE_REASONING_COMPLETE.md](HypermediaInteractionProtocols/agents/ROLE_REASONING_COMPLETE.md)** - Semantic role reasoning implementation
+- **[WORKSPACE_DISCOVERY.md](HypermediaInteractionProtocols/agents/WORKSPACE_DISCOVERY.md)** - Autonomous workspace crawling
 
-**Base Adapter** (`bspl/src/bspl/adapter/core.py:79-753`)
-- Protocol enactment engine
-- Message handling (reactors/generators)
-- History and integrity checking
-- Event-driven architecture
+### Implementation Details
 
-**Protocol Classes** (`bspl/src/bspl/protocol.py:1-734`)
-- Protocol, Message, Role, Parameter definitions
-- BSPL parsing and validation
-- Protocol instantiation and resolution
+- **[CLASS_BASED_DISCOVERY_SUMMARY.md](HypermediaInteractionProtocols/agents/CLASS_BASED_DISCOVERY_SUMMARY.md)** - Quick reference for class-based discovery
+- **[SEMANTIC_ROLE_REASONING.md](HypermediaInteractionProtocols/agents/SEMANTIC_ROLE_REASONING.md)** - Design and algorithm details
+- **[IMPLEMENTATION_COMPLETE.md](HypermediaInteractionProtocols/agents/IMPLEMENTATION_COMPLETE.md)** - Class-based discovery implementation
+- **[TROUBLESHOOTING.md](HypermediaInteractionProtocols/agents/TROUBLESHOOTING.md)** - Common issues and solutions
 
-**Hypermedia Helpers** (`HypermediaInteractionProtocols/agents/helpers.py:1-260`)
-- W3C Thing Description parsing
-- Workspace join/leave operations
-- Protocol and agent discovery
-- RDF/Turtle processing
+### Legacy/Reference
+
+- **[REFACTORING_GUIDE.md](HypermediaInteractionProtocols/agents/REFACTORING_GUIDE.md)** - Migration from MetaAdapter to HypermediaMetaAdapter
+- **[BUGFIX_INITIALIZATION_ORDER.md](HypermediaInteractionProtocols/agents/BUGFIX_INITIALIZATION_ORDER.md)** - Bug fixes during development
+
+## Key Innovations
+
+### 1. Semantic Role Reasoning
+Agents reason about which role to take based on:
+- **Goals** (what they want to achieve: buy, sell, lease)
+- **Capabilities** (what they can do: pay, give, deliver)
+- **Protocol semantics** (role descriptions with goals and requirements)
+
+**Impact**: Eliminates hardcoded role names, enables protocol-agnostic agents
+
+### 2. Class-Based Artifact Discovery
+Agents find artifacts by semantic type, not exact URIs:
+- Query workspaces for artifacts of specific RDF classes
+- Autonomous crawling through workspace hierarchies
+- Pure hypermedia navigation (HATEOAS)
+
+**Impact**: Eliminates hardcoded paths, enables true autonomous navigation
+
+### 3. Unified Autonomous Architecture
+HypermediaMetaAdapter provides single coherent abstraction:
+- Discovery (workspaces, artifacts, protocols, agents)
+- Reasoning (role selection, capability validation)
+- Coordination (role negotiation, system formation)
+- Execution (protocol enactment, message handling)
+
+**Impact**: ~42% less code, cleaner architecture, easier to use
+
+## Research Contributions
+
+This project demonstrates:
+
+1. **Autonomous Agent Behavior** - Agents navigate and reason using only semantic information
+2. **Semantic Web Integration** - Practical use of RDF, SPARQL, and semantic ontologies for agent coordination
+3. **Protocol Compliance** - Formal verification combined with autonomous discovery
+4. **Decentralized Coordination** - No central authority, pure peer-to-peer negotiation
+5. **Progressive Autonomy** - Clear path from hardcoded to fully autonomous agents
 
 ## Further Reading
 
 - **BSPL Specification**: See `bspl/` for detailed protocol language documentation
-- **Metaprotocol**: Role negotiation protocol is defined in `bspl/src/bspl/adapter/meta_adapter.py:8-24`
+- **Metaprotocol**: Role negotiation protocol defined in `bspl/src/bspl/adapter/meta_adapter.py`
 - **Sample Protocols**: Browse `bspl/samples/` for more BSPL protocol examples
 - **W3C Thing Descriptions**: [WoT TD Specification](https://www.w3.org/TR/wot-thing-description/)
+- **GoodRelations Ontology**: [GoodRelations](http://purl.org/goodrelations/v1)
 
 ## License
 
 This project is part of a Master's Thesis research on autonomous multi-agent systems.
+
+---
+
+**Agents that discover, reason, and collaborate autonomously through semantic hypermedia.** 🤖✨
