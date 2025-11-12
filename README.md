@@ -83,11 +83,14 @@ sequenceDiagram
 
 ### Hypermedia-Driven Discovery
 
-Agents use **semantic hypermedia** (W3C Thing Descriptions) to discover:
+Agents use **semantic hypermedia** (W3C Thing Descriptions) to discover everything they need:
+- **Workspaces** through autonomous crawling from a base URL (NEW!)
 - **Other agents** in the environment and their capabilities
 - **Protocols** needed for specific goals (linked from resources)
 - **Endpoints** for communication with other agents
 - **Roles** that agents can enact
+
+**Example:** An agent starting with only `http://localhost:8080/` can autonomously crawl through workspaces to find the one containing its goal artifact, then join that workspace and complete its task - all without hardcoded paths!
 
 ## Architecture
 
@@ -156,19 +159,21 @@ You have two approaches for building agents:
 
 The `HypermediaMetaAdapter` combines BSPL protocol enactment with hypermedia discovery in a single, cohesive abstraction. This is the recommended approach for new agents.
 
-**Quick Example:**
+**Quick Example (with Workspace Discovery):**
 
 ```python
 from HypermediaMetaAdapter import HypermediaMetaAdapter
 
-# Create agent with automatic workspace join
+# Agent discovers workspace autonomously!
 adapter = HypermediaMetaAdapter(
     name="BuyerAgent",
-    workspace_uri="http://localhost:8080/workspaces/bazaar/",
+    base_uri="http://localhost:8080/",  # Just the entry point
+    goal_artifact_uri="http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact",
     web_id="http://localhost:8011",
     adapter_endpoint="8011",
     capabilities={"Pay"},
-    auto_join=True  # Automatically joins workspace
+    auto_discover_workspace=True,  # Crawls to find workspace
+    auto_join=True  # Automatically joins discovered workspace
 )
 
 # Define message handler
@@ -198,13 +203,16 @@ async def main():
 
 **Key Benefits:**
 - 🚀 **~42% less code** compared to manual approach
+- 🔍 **Workspace discovery** through autonomous crawling (NEW!)
 - ✨ **Automatic workspace management** (join/leave)
-- 🔍 **Built-in discovery methods** for agents and protocols
+- 🔎 **Built-in discovery methods** for agents and protocols
 - 🎯 **High-level workflows** that handle multiple steps
 - 🛡️ **Context manager support** for automatic cleanup
 - 📚 **Cleaner, more maintainable code**
 
-See [REFACTORING_GUIDE.md](HypermediaInteractionProtocols/agents/REFACTORING_GUIDE.md) for detailed comparison and migration guide.
+See:
+- [REFACTORING_GUIDE.md](HypermediaInteractionProtocols/agents/REFACTORING_GUIDE.md) - Migration guide
+- [WORKSPACE_DISCOVERY.md](HypermediaInteractionProtocols/agents/WORKSPACE_DISCOVERY.md) - Autonomous workspace crawling (NEW!)
 
 ### Approach 2: MetaAdapter + HypermediaTools (Manual)
 
