@@ -147,6 +147,69 @@ pip install -e .
 
 ## Building Agents with MetaAdapter
 
+You have two approaches for building agents:
+
+1. **HypermediaMetaAdapter** (Recommended) - Unified adapter with integrated hypermedia capabilities
+2. **MetaAdapter + HypermediaTools** - Manual coordination for more control
+
+### Approach 1: HypermediaMetaAdapter (Recommended)
+
+The `HypermediaMetaAdapter` combines BSPL protocol enactment with hypermedia discovery in a single, cohesive abstraction. This is the recommended approach for new agents.
+
+**Quick Example:**
+
+```python
+from HypermediaMetaAdapter import HypermediaMetaAdapter
+
+# Create agent with automatic workspace join
+adapter = HypermediaMetaAdapter(
+    name="BuyerAgent",
+    workspace_uri="http://localhost:8080/workspaces/bazaar/",
+    web_id="http://localhost:8011",
+    adapter_endpoint="8011",
+    capabilities={"Pay"},
+    auto_join=True  # Automatically joins workspace
+)
+
+# Define message handler
+@adapter.reaction("Give")
+async def handle_give(msg):
+    adapter.info(f"Received item: {msg['item']}")
+    return msg
+
+# High-level workflow
+async def main():
+    adapter.start_in_loop()
+
+    # One method does: discover protocol, agents, propose system, negotiate roles
+    system_name = await adapter.discover_and_propose_system(
+        protocol_name="Buy",
+        system_name="BuySystem",
+        my_role="Buyer",
+        goal_item_uri="http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact"
+    )
+
+    # Built-in waiting for system formation
+    if await adapter.wait_for_system_formation(system_name, timeout=10.0):
+        await adapter.initiate_protocol("Buy/Pay", {...})
+
+    adapter.leave_workspace()
+```
+
+**Key Benefits:**
+- 🚀 **~42% less code** compared to manual approach
+- ✨ **Automatic workspace management** (join/leave)
+- 🔍 **Built-in discovery methods** for agents and protocols
+- 🎯 **High-level workflows** that handle multiple steps
+- 🛡️ **Context manager support** for automatic cleanup
+- 📚 **Cleaner, more maintainable code**
+
+See [REFACTORING_GUIDE.md](HypermediaInteractionProtocols/agents/REFACTORING_GUIDE.md) for detailed comparison and migration guide.
+
+### Approach 2: MetaAdapter + HypermediaTools (Manual)
+
+This approach gives you fine-grained control by manually coordinating between `MetaAdapter` and `HypermediaTools`. Use this when you need precise control over each step.
+
 This tutorial demonstrates how to build autonomous agents using the `MetaAdapter` class. We'll use the buyer and seller agents from the demo as reference.
 
 ### Step 1: Initialize Your Agent
@@ -517,10 +580,15 @@ MasterThesis/
 │
 ├── HypermediaInteractionProtocols/ # Demo implementation
 │   ├── agents/
-│   │   ├── buyer_agent.py         # Buyer agent implementation
-│   │   ├── bazaar_agent.py        # Seller agent implementation
-│   │   ├── helpers.py             # Hypermedia utility functions
-│   │   └── semantics_helper.py    # Semantic reasoning helpers
+│   │   ├── HypermediaMetaAdapter.py      # Unified adapter (RECOMMENDED)
+│   │   ├── HypermediaTools.py            # Hypermedia utility library
+│   │   ├── buyer_agent_refactored.py     # Buyer using HypermediaMetaAdapter
+│   │   ├── bazaar_agent_refactored.py    # Seller using HypermediaMetaAdapter
+│   │   ├── buyer_agent.py                # Original buyer (MetaAdapter)
+│   │   ├── bazaar_agent.py               # Original seller (MetaAdapter)
+│   │   ├── helpers.py                    # Legacy utilities
+│   │   ├── semantics_helper.py           # Legacy semantic helpers
+│   │   └── REFACTORING_GUIDE.md          # Migration guide
 │   ├── env/
 │   │   ├── protocols/
 │   │   │   └── buy.bspl          # Buy protocol specification
@@ -531,6 +599,14 @@ MasterThesis/
 ```
 
 ### Core Components
+
+**HypermediaMetaAdapter** (`HypermediaInteractionProtocols/agents/HypermediaMetaAdapter.py`) ⭐ **RECOMMENDED**
+- Unified adapter combining BSPL and hypermedia
+- Automatic workspace management (join/leave)
+- Built-in discovery methods (agents, protocols, goals)
+- High-level workflow methods
+- Context manager support for cleanup
+- ~42% less code for typical agents
 
 **MetaAdapter** (`bspl/src/bspl/adapter/meta_adapter.py:48-269`)
 - Extends base Adapter with dynamic capabilities
