@@ -1,0 +1,16 @@
+@prefix bspl: <http://example.com> .
+
+
+
+<http://localhost:8005/protocol_descriptions/buy_protocol> a bspl:ProtocolDescription;
+    bspl:ProtocolName "Buy";
+    bspl:descriptionOf <http://www.example.com/protocols/buy_protocol> ;
+    bspl:initialMessage "Pay".
+
+# TODO: Need to describe Roles
+# TODO: Need to define initial message to send
+
+
+
+
+<http://localhost:8005/protocols/buy_protocol> a bspl:Protocol.

@@ -42,8 +42,7 @@ def get_body_metadata():
 # It is possible to just bind to messages without also binding to protocols
 # e.g. just to "Give" and not "Buy/Give". TODO: not fully tested yet.
 # =================================================================
-#TODO: fix adapter.enabled to also work with string identifiers
-@adapter.reaction("Buy/Give")
+@adapter.reaction("Give")
 async def give_reaction(msg):
     adapter.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
     return msg
@@ -68,7 +67,6 @@ def generate_buy_params(system_id: str, item_name: str, money: int):
 # 2. The agent gets the protocol needed from goal item
 #    TODO: currently given goal item directly
 # 3. The agent adds the protocol to its known protocols (not as a system simply as a protocol)
-#    TODO: currently using a signifier exposed by the workspace that directly returns the protocols <- better solution?
 # 4. The agent gets the agents present in the workspace and adds them to its address book
 # 5. The agent proposes a system with itself as Buyer and the rest of the roles unassigned
 #    TODO: Should be part of MetaAdapter. If we have semantics that give us our role we can use that.
