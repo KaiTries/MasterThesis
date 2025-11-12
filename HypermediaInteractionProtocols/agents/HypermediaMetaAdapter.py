@@ -34,6 +34,7 @@ class HypermediaMetaAdapter(MetaAdapter):
         workspace_uri: str = None,
         base_uri: str = None,
         goal_artifact_uri: str = None,
+        goal_artifact_class: str = None,
         web_id: str = None,
         adapter_endpoint: str = None,
         capabilities: set = None,
@@ -50,7 +51,8 @@ class HypermediaMetaAdapter(MetaAdapter):
             name: Agent's name
             workspace_uri: URI of the workspace to join (if known)
             base_uri: Base URI to start workspace discovery from (alternative to workspace_uri)
-            goal_artifact_uri: Goal artifact URI for workspace discovery (required if base_uri used)
+            goal_artifact_uri: Goal artifact URI for workspace discovery (URI-based discovery)
+            goal_artifact_class: Goal artifact RDF class for workspace discovery (class-based discovery)
             web_id: Agent's web identifier
             adapter_endpoint: Port number for the BSPL adapter endpoint
             capabilities: Set of message names this agent can send
@@ -60,13 +62,19 @@ class HypermediaMetaAdapter(MetaAdapter):
             auto_join: Automatically join workspace on initialization
             auto_discover_workspace: Automatically discover workspace from base_uri + goal
 
+        Discovery modes (when auto_discover_workspace=True):
+            1. URI-based: Provide base_uri + goal_artifact_uri
+            2. Class-based: Provide base_uri + goal_artifact_class (most autonomous!)
+
         Note:
-            Either workspace_uri OR (base_uri + goal_artifact_uri) must be provided.
-            If auto_discover_workspace=True, workspace discovery happens before joining.
+            Either workspace_uri OR (base_uri + goal_artifact_uri/goal_artifact_class) must be provided.
+            Class-based discovery is the most autonomous - agent only needs to know the semantic
+            type of artifact it wants, not the exact URI.
         """
         # Store hypermedia configuration
         self.base_uri = base_uri
         self.goal_artifact_uri = goal_artifact_uri
+        self.goal_artifact_class = goal_artifact_class
         self.web_id = web_id
         self.adapter_endpoint = adapter_endpoint
         self.artifact_address = None
@@ -88,12 +96,28 @@ class HypermediaMetaAdapter(MetaAdapter):
         # Now we can use self.logger and other initialized attributes
 
         # Auto-discover workspace if requested
-        if auto_discover_workspace and base_uri and goal_artifact_uri:
-            discovered_workspace = self.discover_workspace(base_uri, goal_artifact_uri)
-            if discovered_workspace:
-                self.workspace_uri = discovered_workspace
+        if auto_discover_workspace and base_uri:
+            if goal_artifact_class:
+                # Class-based discovery (most autonomous!)
+                discovered_workspace, discovered_artifact = self.discover_workspace_by_class(
+                    base_uri, goal_artifact_class
+                )
+                if discovered_workspace:
+                    self.workspace_uri = discovered_workspace
+                    self.goal_artifact_uri = discovered_artifact
+                    self.info(f"Discovered workspace: {discovered_workspace}")
+                    self.info(f"Discovered artifact: {discovered_artifact}")
+                else:
+                    raise ValueError(f"Could not discover workspace for artifact class: {goal_artifact_class}")
+            elif goal_artifact_uri:
+                # URI-based discovery
+                discovered_workspace = self.discover_workspace(base_uri, goal_artifact_uri)
+                if discovered_workspace:
+                    self.workspace_uri = discovered_workspace
+                else:
+                    raise ValueError(f"Could not discover workspace for goal artifact: {goal_artifact_uri}")
             else:
-                raise ValueError(f"Could not discover workspace for goal artifact: {goal_artifact_uri}")
+                raise ValueError("auto_discover_workspace requires either goal_artifact_uri or goal_artifact_class")
         else:
             # Use provided workspace_uri or set to None
             self.workspace_uri = workspace_uri
@@ -224,6 +248,49 @@ class HypermediaMetaAdapter(MetaAdapter):
             self.warning(f"Could not discover workspace for artifact: {goal_artifact_uri}")
 
         return workspace_uri
+
+    def discover_workspace_by_class(
+        self,
+        base_uri: str,
+        artifact_class: str,
+        max_depth: int = 5
+    ) -> tuple[Optional[str], Optional[str]]:
+        """
+        Discover which workspace contains an artifact of a specific RDF class.
+        This is the most autonomous form of discovery - the agent only needs to know
+        the semantic type of thing it's looking for, not the exact URI.
+
+        Example:
+            # Agent only knows it wants a rug (ex:Rug class)
+            workspace, rug_uri = adapter.discover_workspace_by_class(
+                "http://localhost:8080/",
+                "http://example.org/Rug"
+            )
+
+        Args:
+            base_uri: Base URI to start crawling from
+            artifact_class: Full URI of the RDF class to search for
+            max_depth: Maximum depth to search (default: 5)
+
+        Returns:
+            Tuple of (workspace_uri, artifact_uri) or (None, None) if not found
+        """
+        self.info(f"Starting class-based workspace discovery from {base_uri}")
+        self.info(f"Looking for artifact of class: {artifact_class}")
+
+        workspace_uri, artifact_uri = HypermediaTools.discover_workspace_by_artifact_class(
+            base_uri,
+            artifact_class,
+            max_depth
+        )
+
+        if workspace_uri and artifact_uri:
+            self.info(f"Discovered workspace: {workspace_uri}")
+            self.info(f"Discovered artifact: {artifact_uri}")
+        else:
+            self.warning(f"Could not discover workspace for artifact class: {artifact_class}")
+
+        return workspace_uri, artifact_uri
 
     def discover_protocol_for_goal(self, goal_item_uri: str) -> Optional[Protocol]:
         """

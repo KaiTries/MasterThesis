@@ -26,15 +26,15 @@ import time
 # =================================================================
 NAME = "BuyerAgent"
 BASE_URL = 'http://localhost:8080/'  # Only the base URL!
-GOAL_ITEM = 'http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact'
+GOAL_ITEM_CLASS = 'http://example.org/Rug'  # Only knows the semantic class!
 ADAPTER_PORT = 8011
 
 # Create adapter with workspace discovery
-# Note: workspace_uri is NOT provided - will be discovered!
+# Note: workspace_uri is NOT provided - will be discovered by class!
 adapter = HypermediaMetaAdapter(
     name=NAME,
     base_uri=BASE_URL,  # Start here
-    goal_artifact_uri=GOAL_ITEM,  # Find this
+    goal_artifact_class=GOAL_ITEM_CLASS,  # Find any artifact of this class
     web_id=f'http://localhost:{ADAPTER_PORT}',
     adapter_endpoint=str(ADAPTER_PORT),
     capabilities={"Pay"},
@@ -82,38 +82,42 @@ def generate_buy_params(system_id: str, item_name: str, money: int) -> dict:
 # =================================================================
 async def main():
     """
-    Main buyer agent workflow with workspace discovery:
+    Main buyer agent workflow with class-based workspace discovery:
 
-    1. Discover workspace (crawl from base URL)
+    1. Discover workspace by artifact class (crawl from base URL)
     2. Join discovered workspace
-    3. Discover protocol from goal item
+    3. Discover protocol from discovered artifact
     4. Discover agents and propose system
     5. Wait for system formation
     6. Initiate buy transactions
     7. Clean up and leave workspace
     """
     adapter.info("=" * 60)
-    adapter.info("BUYER AGENT STARTING - WORKSPACE DISCOVERY MODE")
+    adapter.info("BUYER AGENT STARTING - CLASS-BASED DISCOVERY MODE")
     adapter.info("=" * 60)
     adapter.info(f"Base URL: {BASE_URL}")
-    adapter.info(f"Goal Item: {GOAL_ITEM}")
+    adapter.info(f"Goal Item Class: {GOAL_ITEM_CLASS}")
     adapter.info("")
 
     # Start the adapter
     adapter.start_in_loop()
 
     # ========================================
-    # STEP 1: Discover Workspace
+    # STEP 1: Discover Workspace by Artifact Class
     # ========================================
-    adapter.info("STEP 1: Discovering workspace through hypermedia crawling...")
-    discovered_workspace = adapter.discover_workspace(BASE_URL, GOAL_ITEM)
+    adapter.info("STEP 1: Discovering workspace through semantic class search...")
+    discovered_workspace, discovered_artifact = adapter.discover_workspace_by_class(
+        BASE_URL, GOAL_ITEM_CLASS
+    )
 
     if not discovered_workspace:
-        adapter.logger.error("✗ Could not discover workspace for goal artifact")
+        adapter.logger.error(f"✗ Could not discover workspace for artifact class: {GOAL_ITEM_CLASS}")
         return
 
     adapter.info(f"✓ Discovered workspace: {discovered_workspace}")
+    adapter.info(f"✓ Discovered artifact: {discovered_artifact}")
     adapter.workspace_uri = discovered_workspace
+    adapter.goal_artifact_uri = discovered_artifact
     adapter.info("")
 
     # ========================================
@@ -131,10 +135,10 @@ async def main():
     # ========================================
     # STEP 3: Discover Protocol
     # ========================================
-    adapter.info("STEP 3: Discovering protocol from goal item...")
-    protocol = adapter.discover_protocol_for_goal(GOAL_ITEM)
+    adapter.info("STEP 3: Discovering protocol from discovered artifact...")
+    protocol = adapter.discover_protocol_for_goal(adapter.goal_artifact_uri)
     if not protocol:
-        adapter.logger.error("✗ Could not discover protocol for goal item")
+        adapter.logger.error("✗ Could not discover protocol for discovered artifact")
         adapter.leave_workspace()
         return
 

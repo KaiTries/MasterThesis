@@ -75,8 +75,8 @@ def test_initialization():
 
     print()
 
-    # Test 2: Initialization with discovery parameters (but not enabled)
-    print("Test 2: Initialization with discovery parameters (disabled)")
+    # Test 2: Initialization with URI-based discovery parameters (but not enabled)
+    print("Test 2: Initialization with URI-based discovery params (disabled)")
     try:
         adapter = HypermediaMetaAdapter(
             name='TestAgent2',
@@ -89,10 +89,10 @@ def test_initialization():
             auto_join=False,
             debug=False
         )
-        print("  ✓ Initialization with discovery params successful")
+        print("  ✓ Initialization with URI-based discovery params successful")
         print(f"  - Name: {adapter.name}")
         print(f"  - Base URI: {adapter.base_uri}")
-        print(f"  - Goal: {adapter.goal_artifact_uri}")
+        print(f"  - Goal URI: {adapter.goal_artifact_uri}")
         print(f"  - Workspace: {adapter.workspace_uri}")
         print(f"  - Logger exists: {hasattr(adapter, 'logger')}")
     except Exception as e:
@@ -101,30 +101,60 @@ def test_initialization():
 
     print()
 
-    # Test 3: Test discover_workspace method signature (without calling it)
-    print("Test 3: Verify discover_workspace method exists")
+    # Test 3: Initialization with class-based discovery parameters (but not enabled)
+    print("Test 3: Initialization with class-based discovery params (disabled)")
     try:
         adapter = HypermediaMetaAdapter(
             name='TestAgent3',
-            workspace_uri='http://localhost:8080/workspaces/bazaar/',
+            base_uri='http://localhost:8080/',
+            goal_artifact_class='http://example.org/Rug',
             web_id='http://localhost:9997',
             adapter_endpoint='9997',
+            capabilities={'Test'},
+            auto_discover_workspace=False,  # Disabled
+            auto_join=False,
+            debug=False
+        )
+        print("  ✓ Initialization with class-based discovery params successful")
+        print(f"  - Name: {adapter.name}")
+        print(f"  - Base URI: {adapter.base_uri}")
+        print(f"  - Goal class: {adapter.goal_artifact_class}")
+        print(f"  - Workspace: {adapter.workspace_uri}")
+        print(f"  - Logger exists: {hasattr(adapter, 'logger')}")
+    except Exception as e:
+        print(f"  ✗ Failed: {e}")
+        return False
+
+    print()
+
+    # Test 4: Test discover_workspace methods exist
+    print("Test 4: Verify discovery methods exist")
+    try:
+        adapter = HypermediaMetaAdapter(
+            name='TestAgent4',
+            workspace_uri='http://localhost:8080/workspaces/bazaar/',
+            web_id='http://localhost:9996',
+            adapter_endpoint='9996',
             capabilities={'Test'},
             auto_join=False,
             debug=False
         )
 
-        # Check method exists
+        # Check URI-based discovery method
         assert hasattr(adapter, 'discover_workspace')
         print("  ✓ discover_workspace method exists")
-
-        # Check it's callable
         assert callable(adapter.discover_workspace)
         print("  ✓ discover_workspace is callable")
 
-        # Check logger is available for the method
+        # Check class-based discovery method
+        assert hasattr(adapter, 'discover_workspace_by_class')
+        print("  ✓ discover_workspace_by_class method exists")
+        assert callable(adapter.discover_workspace_by_class)
+        print("  ✓ discover_workspace_by_class is callable")
+
+        # Check logger is available
         assert hasattr(adapter, 'logger')
-        print("  ✓ Logger is available for discover_workspace")
+        print("  ✓ Logger is available for discovery methods")
 
     except Exception as e:
         print(f"  ✗ Failed: {e}")
@@ -137,7 +167,8 @@ def test_initialization():
     print()
     print("NOTE: To test actual workspace discovery, run:")
     print("  1. Start environment: cd HypermediaInteractionProtocols && ./start.sh")
-    print("  2. Run agent: python buyer_agent_auto_discovery.py")
+    print("  2. Run URI-based agent: python buyer_agent_with_discovery.py")
+    print("  3. Run class-based agent: python buyer_agent_auto_discovery.py")
     return True
 
 

@@ -3,8 +3,9 @@
 @prefix wotsec: <https://www.w3.org/2019/wot/security#> .
 @prefix td: <https://www.w3.org/2019/wot/td#> .
 @prefix gr: <http://purl.org/goodrelations/v1#> .
+@prefix ex: <http://example.org/> .
 
-<workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance;
+<workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance, ex:Rug;
   td:title "rug";
   td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
     ].

@@ -22,18 +22,18 @@ import time
 # =================================================================
 NAME = "BuyerAgent"
 BASE_URL = 'http://localhost:8080/'
-GOAL_ITEM = 'http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact'
+GOAL_ITEM_CLASS = 'http://example.org/Rug'  # Only knows the semantic class!
 ADAPTER_PORT = 8011
 
 
 # =================================================================
-# Create adapter with AUTOMATIC workspace discovery
+# Create adapter with AUTOMATIC class-based workspace discovery
 # =================================================================
 try:
     adapter = HypermediaMetaAdapter(
         name=NAME,
-        base_uri=BASE_URL,                    # Start here
-        goal_artifact_uri=GOAL_ITEM,          # Find this
+        base_uri=BASE_URL,                     # Start here
+        goal_artifact_class=GOAL_ITEM_CLASS,   # Find any artifact of this class!
         web_id=f'http://localhost:{ADAPTER_PORT}',
         adapter_endpoint=str(ADAPTER_PORT),
         capabilities={"Pay"},
@@ -41,8 +41,9 @@ try:
         auto_discover_workspace=True,          # ← Automatic discovery!
         auto_join=True                         # ← Automatic join!
     )
-    # At this point, workspace is already discovered and joined!
+    # At this point, workspace AND artifact are discovered and joined!
     print(f"✓ Workspace discovered and joined: {adapter.workspace_uri}")
+    print(f"✓ Artifact discovered: {adapter.goal_artifact_uri}")
 except ValueError as e:
     print(f"✗ Failed to discover workspace: {e}")
     print("\nMake sure the Yggdrasil environment is running:")
@@ -83,13 +84,13 @@ def generate_buy_params(system_id: str, item_name: str, money: int) -> dict:
 # =================================================================
 async def main():
     """
-    Simple workflow - workspace already discovered and joined!
+    Simple workflow - workspace AND artifact already discovered and joined!
     """
-    adapter.info("🚀 Buyer agent started (workspace auto-discovered)")
+    adapter.info("🚀 Buyer agent started (class-based discovery completed)")
     adapter.start_in_loop()
 
-    # Discover protocol
-    protocol = adapter.discover_protocol_for_goal(GOAL_ITEM)
+    # Discover protocol (using the discovered artifact URI)
+    protocol = adapter.discover_protocol_for_goal(adapter.goal_artifact_uri)
     if not protocol:
         adapter.leave_workspace()
         return

@@ -571,6 +571,219 @@ def discover_workspace_for_goal(
     return result
 
 
+def get_artifacts_by_class(workspace_uri: str, artifact_class: str) -> list[str]:
+    """
+    Get artifacts of a specific RDF class from a workspace.
+
+    This function queries individual artifacts since the collection endpoint
+    doesn't include all type information.
+
+    Example:
+        # Find all rugs in a workspace
+        rugs = get_artifacts_by_class(
+            "http://localhost:8080/workspaces/bazaar/",
+            "http://example.org/Rug"
+        )
+        # Returns: ["http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact"]
+
+    Args:
+        workspace_uri: URI of the workspace to search
+        artifact_class: Full URI of the RDF class (e.g., "http://example.org/Rug")
+
+    Returns:
+        List of artifact URIs that are instances of the given class
+    """
+    try:
+        # Step 1: Get all artifacts from the collection endpoint
+        artifacts_uri = workspace_uri.rstrip('/') + '/artifacts/'
+        response = requests.get(artifacts_uri)
+        if response.status_code != 200:
+            return []
+
+        graph = get_model(response.text)
+
+        # Get all artifacts (just their URIs)
+        query_all = """
+        PREFIX hmas: <https://purl.org/hmas/>
+        SELECT ?artifact WHERE {
+          ?artifact a hmas:Artifact .
+        }
+        """
+
+        all_artifacts = []
+        for row in graph.query(query_all):
+            all_artifacts.append(str(row.artifact))
+
+        # Step 2: Query each individual artifact for its full type information
+        matching_artifacts = []
+        for artifact_uri in all_artifacts:
+            # Remove fragment to get the artifact's representation URI
+            artifact_repr_uri = artifact_uri.split('#')[0]
+
+            # Fetch the individual artifact
+            try:
+                artifact_response = requests.get(artifact_repr_uri, timeout=5)
+                if artifact_response.status_code == 200:
+                    artifact_graph = get_model(artifact_response.text)
+
+                    # Check if this artifact has the requested class
+                    check_query = f"""
+                    SELECT ?s WHERE {{
+                      ?s a <{artifact_class}> .
+                    }}
+                    """
+                    results = list(artifact_graph.query(check_query))
+                    if results:
+                        # Found an artifact with the matching class
+                        matching_artifacts.append(artifact_uri)
+            except Exception as e:
+                print(f"  Warning: Could not fetch artifact {artifact_repr_uri}: {e}")
+                continue
+
+        return matching_artifacts
+    except Exception as e:
+        print(f"Error discovering artifacts of class {artifact_class} in {workspace_uri}: {e}")
+        return []
+
+
+def find_workspace_containing_artifact_class(
+    base_uri: str,
+    artifact_class: str,
+    max_depth: int = 5,
+    _current_depth: int = 0
+) -> tuple[Optional[str], Optional[str]]:
+    """
+    Recursively crawl workspaces to find one containing an artifact of a specific class.
+    This enables truly autonomous discovery - agents only need to know what TYPE of thing
+    they're looking for, not the exact URI.
+
+    Example:
+        # Find any rug, wherever it may be
+        workspace, artifact = find_workspace_containing_artifact_class(
+            "http://localhost:8080/",
+            "http://example.org/Rug"
+        )
+        # Returns: ("http://localhost:8080/workspaces/bazaar/",
+        #           "http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact")
+
+    Args:
+        base_uri: Starting URI (can be root or a workspace)
+        artifact_class: Full URI of the RDF class to search for
+        max_depth: Maximum depth to search (prevent infinite loops)
+        _current_depth: Internal parameter for recursion tracking
+
+    Returns:
+        Tuple of (workspace_uri, artifact_uri) or (None, None) if not found
+    """
+    if _current_depth >= max_depth:
+        print(f"Max depth {max_depth} reached, stopping search")
+        return None, None
+
+    print(f"{'  ' * _current_depth}Searching workspace: {base_uri}")
+
+    # Ensure base_uri ends with /
+    if not base_uri.endswith('/'):
+        base_uri += '/'
+
+    # Check if an artifact of this class exists in current workspace
+    artifacts = get_artifacts_by_class(base_uri, artifact_class)
+    print(f"{'  ' * _current_depth}Found {len(artifacts)} artifact(s) of class")
+
+    if artifacts:
+        # Return the first matching artifact
+        clean_uri = clean_workspace_uri(base_uri)
+        print(f"{'  ' * _current_depth}✓ Found artifact of class in workspace: {clean_uri}")
+        return clean_uri, artifacts[0]
+
+    # If not found, search sub-workspaces
+    sub_workspaces = get_workspaces_in(base_uri)
+    print(f"{'  ' * _current_depth}Found {len(sub_workspaces)} sub-workspaces")
+
+    for sub_workspace in sub_workspaces:
+        workspace, artifact = find_workspace_containing_artifact_class(
+            sub_workspace,
+            artifact_class,
+            max_depth,
+            _current_depth + 1
+        )
+        if workspace:
+            return workspace, artifact
+
+    # Not found in this branch
+    return None, None
+
+
+def discover_workspace_by_artifact_class(
+    base_uri: str,
+    artifact_class: str,
+    max_depth: int = 5
+) -> tuple[Optional[str], Optional[str]]:
+    """
+    Discover which workspace contains an artifact of a specific class.
+    This is the main entry point for class-based workspace discovery.
+
+    This represents the most autonomous form of discovery - the agent only needs:
+    - A base URI to start from
+    - The semantic type of artifact it's looking for
+
+    Everything else (workspace location, exact artifact URI) is discovered through
+    hypermedia traversal and semantic queries.
+
+    Example:
+        # Agent only knows it wants a rug (ex:Rug class)
+        workspace, rug_uri = discover_workspace_by_artifact_class(
+            "http://localhost:8080/",
+            "http://example.org/Rug"
+        )
+        # Discovers: ("http://localhost:8080/workspaces/bazaar/",
+        #             "http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact")
+
+    Args:
+        base_uri: Base URI to start crawling from
+        artifact_class: Full URI of the RDF class to search for
+        max_depth: Maximum depth to search (default: 5)
+
+    Returns:
+        Tuple of (workspace_uri, artifact_uri) or (None, None) if not found
+    """
+    print(f"\n=== Starting class-based workspace discovery ===")
+    print(f"Base URI: {base_uri}")
+    print(f"Artifact class: {artifact_class}")
+    print(f"Max depth: {max_depth}")
+    print()
+
+    # Try to find workspaces at the base URI first
+    workspaces = get_workspaces_in(base_uri)
+
+    if not workspaces:
+        # No workspaces at base, treat base as a workspace itself
+        print("No sub-workspaces found at base, checking base as workspace...")
+        workspace, artifact = find_workspace_containing_artifact_class(
+            base_uri, artifact_class, max_depth
+        )
+    else:
+        # Search through discovered workspaces
+        print(f"Found {len(workspaces)} workspaces at base URI")
+        workspace = None
+        artifact = None
+        for ws in workspaces:
+            workspace, artifact = find_workspace_containing_artifact_class(
+                ws, artifact_class, max_depth
+            )
+            if workspace:
+                break
+
+    if workspace and artifact:
+        print(f"\n✓ Discovery successful!")
+        print(f"  Workspace: {workspace}")
+        print(f"  Artifact: {artifact}")
+    else:
+        print(f"\n✗ Discovery failed. No artifact of class {artifact_class} found.")
+
+    print("=== Class-based discovery complete ===\n")
+    return workspace, artifact
+
+
 # =============================================================================
 # Semantic Protocol Discovery (Goal-oriented)
 # =============================================================================
