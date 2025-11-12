@@ -35,6 +35,7 @@ class HypermediaMetaAdapter(MetaAdapter):
         base_uri: str = None,
         goal_artifact_uri: str = None,
         goal_artifact_class: str = None,
+        goal_type: str = None,
         web_id: str = None,
         adapter_endpoint: str = None,
         capabilities: set = None,
@@ -42,7 +43,8 @@ class HypermediaMetaAdapter(MetaAdapter):
         agents: dict = None,
         debug: bool = False,
         auto_join: bool = True,
-        auto_discover_workspace: bool = False
+        auto_discover_workspace: bool = False,
+        auto_reason_role: bool = True
     ):
         """
         Initialize HypermediaMetaAdapter.
@@ -53,6 +55,7 @@ class HypermediaMetaAdapter(MetaAdapter):
             base_uri: Base URI to start workspace discovery from (alternative to workspace_uri)
             goal_artifact_uri: Goal artifact URI for workspace discovery (URI-based discovery)
             goal_artifact_class: Goal artifact RDF class for workspace discovery (class-based discovery)
+            goal_type: Agent's goal type for role reasoning (e.g., gr:Buy, gr:Sell)
             web_id: Agent's web identifier
             adapter_endpoint: Port number for the BSPL adapter endpoint
             capabilities: Set of message names this agent can send
@@ -61,10 +64,15 @@ class HypermediaMetaAdapter(MetaAdapter):
             debug: Enable debug logging
             auto_join: Automatically join workspace on initialization
             auto_discover_workspace: Automatically discover workspace from base_uri + goal
+            auto_reason_role: Automatically reason which role to take in protocols
 
         Discovery modes (when auto_discover_workspace=True):
             1. URI-based: Provide base_uri + goal_artifact_uri
             2. Class-based: Provide base_uri + goal_artifact_class (most autonomous!)
+
+        Role reasoning (when auto_reason_role=True):
+            Agent reasons which role to take based on goal_type and capabilities.
+            Example: goal_type=gr:Buy + capabilities={Pay} → automatically takes Buyer role
 
         Note:
             Either workspace_uri OR (base_uri + goal_artifact_uri/goal_artifact_class) must be provided.
@@ -75,6 +83,8 @@ class HypermediaMetaAdapter(MetaAdapter):
         self.base_uri = base_uri
         self.goal_artifact_uri = goal_artifact_uri
         self.goal_artifact_class = goal_artifact_class
+        self.goal_type = goal_type
+        self.auto_reason_role = auto_reason_role
         self.web_id = web_id
         self.adapter_endpoint = adapter_endpoint
         self.artifact_address = None
@@ -315,6 +325,65 @@ class HypermediaMetaAdapter(MetaAdapter):
 
         self.info(f"Found protocol '{protocol_name}' for goal item")
         return self.discover_protocol(protocol_name)
+
+    def reason_my_role(self, protocol: Protocol, verbose: bool = None) -> Optional[str]:
+        """
+        Reason which role this agent should take in a protocol based on its goal and capabilities.
+
+        This implements semantic role reasoning - the agent determines its role based on:
+        1. Its goal (e.g., gr:Buy to acquire, gr:Sell to provide)
+        2. Its capabilities (e.g., {"Pay"} means can send Pay messages)
+        3. The protocol's role semantics (which role matches the goal + capabilities)
+
+        Example:
+            protocol = adapter.discover_protocol_for_goal(artifact_uri)
+            my_role = adapter.reason_my_role(protocol)
+            # Returns: "Buyer" (if goal=gr:Buy and capabilities={Pay})
+
+        Args:
+            protocol: The protocol to reason about
+            verbose: Print reasoning steps (default: uses debug setting)
+
+        Returns:
+            Role name that best matches, or None if:
+            - No goal_type configured
+            - No role semantics available
+            - No compatible role found
+        """
+        if not self.goal_type:
+            self.warning("Cannot reason role: no goal_type specified")
+            self.info("Set goal_type parameter (e.g., goal_type='http://purl.org/goodrelations/v1#Buy')")
+            return None
+
+        if verbose is None:
+            verbose = self.debug
+
+        self.info(f"Reasoning role for protocol: {protocol.name}")
+        self.info(f"  My goal: {self.goal_type}")
+        self.info(f"  My capabilities: {self.capabilities}")
+
+        # Get protocol description URI (where role semantics are served)
+        # Protocol descriptions contain the RDF metadata including role semantics
+        protocol_uri = f"http://localhost:8005/protocol_descriptions/{protocol.name.lower()}_protocol"
+
+        # Reason the role
+        role = HypermediaTools.reason_role_for_goal(
+            protocol_uri,
+            self.goal_type,
+            self.capabilities,
+            verbose=verbose
+        )
+
+        if role:
+            self.info(f"✓ Reasoned my role: {role}")
+        else:
+            self.warning("Could not reason appropriate role for this protocol")
+            self.info("Possible reasons:")
+            self.info("  - No role semantics available for protocol")
+            self.info("  - Goal/capability mismatch with available roles")
+            self.info("  - Missing required capabilities")
+
+        return role
 
     def advertise_roles(self) -> bool:
         """

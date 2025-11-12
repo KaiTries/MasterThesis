@@ -22,17 +22,39 @@ file.close()
 
 bspl_rdf = """
 @prefix bspl: <https://purl.org/hmas/bspl/> .
+@prefix gr: <http://purl.org/goodrelations/v1#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://localhost:8005/protocol_descriptions/buy_protocol> a bspl:ProtocolDescription;
     bspl:ProtocolName "Buy";
     bspl:descriptionOf <http://localhost:8005/protocols/buy_protocol> ;
     bspl:initialMessage "Pay".
 
-// TODO: Need to describe Roles
-// TODO: Need to define initial message to send
+<http://localhost:8005/protocols/buy_protocol> a bspl:Protocol;
+    bspl:hasRole <http://localhost:8005/protocols/buy_protocol#BuyerRole> ,
+                 <http://localhost:8005/protocols/buy_protocol#SellerRole> .
 
+# Semantic Role Descriptions for autonomous role reasoning
 
-<http://localhost:8005/protocols/buy_protocol> a bspl:Protocol.
+<http://localhost:8005/protocols/buy_protocol#BuyerRole>
+    a bspl:Role ;
+    bspl:roleName "Buyer" ;
+    bspl:hasGoal gr:Buy ;
+    bspl:requiresCapability "Pay" ;
+    bspl:sendsMessage "Pay" ;
+    bspl:receivesMessage "Give" ;
+    rdfs:comment "The Buyer acquires items by providing payment. This role is suitable for agents whose goal is to buy/acquire artifacts." ;
+    rdfs:label "Buyer" .
+
+<http://localhost:8005/protocols/buy_protocol#SellerRole>
+    a bspl:Role ;
+    bspl:roleName "Seller" ;
+    bspl:hasGoal gr:Sell ;
+    bspl:requiresCapability "Give" ;
+    bspl:sendsMessage "Give" ;
+    bspl:receivesMessage "Pay" ;
+    rdfs:comment "The Seller provides items in exchange for payment. This role is suitable for agents whose goal is to sell/provide artifacts." ;
+    rdfs:label "Seller" .
 """
 
 app = Flask(__name__)

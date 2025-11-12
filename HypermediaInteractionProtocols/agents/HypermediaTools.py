@@ -1033,6 +1033,227 @@ def generate_role_metadata(artifact_address: str, role_names: list[str], protoco
 
 
 # =============================================================================
+# Semantic Role Reasoning
+# =============================================================================
+
+def get_role_semantics(protocol_uri: str) -> dict:
+    """
+    Get semantic information about roles in a protocol.
+
+    Queries the protocol for role descriptions including goals, required capabilities,
+    and message sending/receiving patterns. This enables agents to reason about which
+    role they should take.
+
+    Example:
+        semantics = get_role_semantics("http://localhost:8005/protocols/buy_protocol")
+        # Returns: {
+        #     "Buyer": {
+        #         "goal": "http://purl.org/goodrelations/v1#Buy",
+        #         "required_capability": "Pay",
+        #         "sends": ["Pay"],
+        #         "receives": ["Give"],
+        #         "description": "Acquires items by paying"
+        #     },
+        #     "Seller": { ... }
+        # }
+
+    Args:
+        protocol_uri: URI of the protocol
+
+    Returns:
+        Dictionary mapping role names to their semantic properties,
+        or empty dict if no semantics found
+    """
+    try:
+        # Fetch protocol metadata
+        response = requests.get(protocol_uri, timeout=5)
+        if response.status_code != 200:
+            print(f"Could not fetch protocol at {protocol_uri}")
+            return {}
+
+        # Parse RDF
+        graph = get_model(response.text)
+
+        # Query for role semantics
+        query = """
+        PREFIX bspl: <https://purl.org/hmas/bspl/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?role ?roleName ?goal ?capability ?sends ?receives ?description WHERE {
+          ?role a bspl:Role ;
+                bspl:roleName ?roleName .
+
+          OPTIONAL { ?role bspl:hasGoal ?goal }
+          OPTIONAL { ?role bspl:requiresCapability ?capability }
+          OPTIONAL { ?role bspl:sendsMessage ?sends }
+          OPTIONAL { ?role bspl:receivesMessage ?receives }
+          OPTIONAL { ?role rdfs:comment ?description }
+        }
+        """
+
+        # Build result dictionary
+        roles = {}
+        for row in graph.query(query):
+            role_name = str(row.roleName)
+
+            if role_name not in roles:
+                roles[role_name] = {
+                    "uri": str(row.role),
+                    "goal": str(row.goal) if row.goal else None,
+                    "required_capability": str(row.capability) if row.capability else None,
+                    "sends": [],
+                    "receives": [],
+                    "description": str(row.description) if row.description else None
+                }
+
+            # Collect messages (there may be multiple)
+            if row.sends and str(row.sends) not in roles[role_name]["sends"]:
+                roles[role_name]["sends"].append(str(row.sends))
+            if row.receives and str(row.receives) not in roles[role_name]["receives"]:
+                roles[role_name]["receives"].append(str(row.receives))
+
+        return roles
+
+    except Exception as e:
+        print(f"Error getting role semantics for {protocol_uri}: {e}")
+        return {}
+
+
+def score_role_match(
+    role_name: str,
+    role_semantics: dict,
+    agent_goal: str,
+    agent_capabilities: set
+) -> int:
+    """
+    Calculate how well a role matches an agent's goal and capabilities.
+
+    Scoring system (strict matching):
+    - Goal must match for role to be viable
+    - Goal match: +10
+    - Goal mismatch: incompatible (return 0)
+    - Required capability available: +5
+    - Missing required capability: incompatible (return 0)
+    - Additional compatible capabilities: +1 each
+
+    Args:
+        role_name: Name of the role
+        role_semantics: Semantic properties of the role
+        agent_goal: Agent's goal URI (e.g., "http://purl.org/goodrelations/v1#Buy")
+        agent_capabilities: Set of agent's capabilities (e.g., {"Pay", "Give"})
+
+    Returns:
+        Compatibility score (higher is better, 0 means incompatible)
+    """
+    score = 0
+
+    # Goal alignment (REQUIRED - if goal doesn't match, role is unsuitable)
+    if role_semantics.get("goal") == agent_goal:
+        score += 10
+        print(f"  {role_name}: goal matches ({agent_goal}) +10")
+    else:
+        # Goal mismatch - this role is not suitable for the agent's goal
+        print(f"  {role_name}: goal mismatch (want {agent_goal}, role has {role_semantics.get('goal')}) - incompatible")
+        return 0  # Incompatible due to goal mismatch
+
+    # Required capability match (important - weight: 5)
+    required_cap = role_semantics.get("required_capability")
+    if required_cap:
+        if required_cap in agent_capabilities:
+            score += 5
+            print(f"  {role_name}: has required capability ({required_cap}) +5")
+        else:
+            # Can't take this role - missing required capability
+            print(f"  {role_name}: missing required capability ({required_cap}) - incompatible")
+            return 0  # Incompatible
+    else:
+        print(f"  {role_name}: no required capability specified")
+
+    # Additional message capabilities (nice to have - weight: 1 each)
+    for msg in role_semantics.get("sends", []):
+        if msg in agent_capabilities:
+            score += 1
+            print(f"  {role_name}: can send {msg} +1")
+
+    print(f"  {role_name}: total score = {score}")
+    return score
+
+
+def reason_role_for_goal(
+    protocol_uri: str,
+    agent_goal: str,
+    agent_capabilities: set,
+    verbose: bool = True
+) -> Optional[str]:
+    """
+    Reason which role an agent should take in a protocol based on its goal and capabilities.
+
+    This implements semantic role reasoning - the agent doesn't need to know role names,
+    it only needs to know what it wants to do (goal) and what it can do (capabilities).
+
+    Example:
+        role = reason_role_for_goal(
+            "http://localhost:8005/protocols/buy_protocol",
+            "http://purl.org/goodrelations/v1#Buy",  # I want to buy
+            {"Pay"}  # I can pay
+        )
+        # Returns: "Buyer"
+
+    Args:
+        protocol_uri: URI of the protocol
+        agent_goal: Agent's goal (e.g., gr:Buy, gr:Sell)
+        agent_capabilities: Set of agent's capabilities
+        verbose: Print reasoning steps (default: True)
+
+    Returns:
+        Role name that best matches, or None if no compatible role found
+    """
+    if verbose:
+        print(f"\n=== Role Reasoning ===")
+        print(f"Protocol: {protocol_uri}")
+        print(f"Agent goal: {agent_goal}")
+        print(f"Agent capabilities: {agent_capabilities}")
+        print()
+
+    # Get role semantics
+    roles = get_role_semantics(protocol_uri)
+
+    if not roles:
+        if verbose:
+            print("✗ No role semantics found for protocol")
+        return None
+
+    if verbose:
+        print(f"Found {len(roles)} role(s) with semantics: {list(roles.keys())}")
+        print()
+
+    # Score each role
+    scores = {}
+    for role_name, role_sem in roles.items():
+        if verbose:
+            print(f"Evaluating {role_name}:")
+        score = score_role_match(role_name, role_sem, agent_goal, agent_capabilities)
+        scores[role_name] = score
+        if verbose:
+            print()
+
+    # Find best role
+    if not scores or max(scores.values()) == 0:
+        if verbose:
+            print("✗ No compatible role found")
+        return None
+
+    best_role = max(scores, key=scores.get)
+    best_score = scores[best_role]
+
+    if verbose:
+        print(f"✓ Best role: {best_role} (score: {best_score})")
+        print("=== Role Reasoning Complete ===\n")
+
+    return best_role
+
+
+# =============================================================================
 # Convenience Aliases
 # =============================================================================
 

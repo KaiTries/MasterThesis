@@ -1,0 +1,47 @@
+@prefix bspl: <https://purl.org/hmas/bspl/> .
+@prefix gr: <http://purl.org/goodrelations/v1#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Semantic descriptions of roles in the Buy protocol
+# These allow agents to reason which role they should take based on their goals and capabilities
+
+<http://localhost:8005/protocols/buy_protocol#BuyerRole>
+    a bspl:Role ;
+    bspl:roleName "Buyer" ;
+
+    # Goal: What is this role trying to achieve?
+    bspl:hasGoal gr:Buy ;  # Acquire/purchase items
+
+    # Requirements: What capabilities must an agent have?
+    bspl:requiresCapability "Pay" ;  # Must be able to pay
+
+    # Behavior: What does this role do?
+    bspl:sendsMessage "Pay" ;        # Sends payment
+    bspl:receivesMessage "Give" ;    # Receives item
+
+    # Description for humans
+    rdfs:comment "The Buyer acquires items by providing payment. This role is suitable for agents whose goal is to buy/acquire artifacts." ;
+    rdfs:label "Buyer" .
+
+<http://localhost:8005/protocols/buy_protocol#SellerRole>
+    a bspl:Role ;
+    bspl:roleName "Seller" ;
+
+    # Goal: What is this role trying to achieve?
+    bspl:hasGoal gr:Sell ;  # Provide/sell items
+
+    # Requirements: What capabilities must an agent have?
+    bspl:requiresCapability "Give" ;  # Must be able to deliver
+
+    # Behavior: What does this role do?
+    bspl:sendsMessage "Give" ;        # Delivers item
+    bspl:receivesMessage "Pay" ;      # Receives payment
+
+    # Description for humans
+    rdfs:comment "The Seller provides items in exchange for payment. This role is suitable for agents whose goal is to sell/provide artifacts." ;
+    rdfs:label "Seller" .
+
+# Link to the actual protocol
+<http://localhost:8005/protocols/buy_protocol>
+    bspl:hasRole <http://localhost:8005/protocols/buy_protocol#BuyerRole> ,
+                 <http://localhost:8005/protocols/buy_protocol#SellerRole> .
