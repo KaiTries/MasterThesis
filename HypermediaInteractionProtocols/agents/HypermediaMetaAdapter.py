@@ -31,21 +31,26 @@ class HypermediaMetaAdapter(MetaAdapter):
     def __init__(
         self,
         name: str,
-        workspace_uri: str,
-        web_id: str,
-        adapter_endpoint: str,
+        workspace_uri: str = None,
+        base_uri: str = None,
+        goal_artifact_uri: str = None,
+        web_id: str = None,
+        adapter_endpoint: str = None,
         capabilities: set = None,
         systems: dict = None,
         agents: dict = None,
         debug: bool = False,
-        auto_join: bool = True
+        auto_join: bool = True,
+        auto_discover_workspace: bool = False
     ):
         """
         Initialize HypermediaMetaAdapter.
 
         Args:
             name: Agent's name
-            workspace_uri: URI of the workspace to join
+            workspace_uri: URI of the workspace to join (if known)
+            base_uri: Base URI to start workspace discovery from (alternative to workspace_uri)
+            goal_artifact_uri: Goal artifact URI for workspace discovery (required if base_uri used)
             web_id: Agent's web identifier
             adapter_endpoint: Port number for the BSPL adapter endpoint
             capabilities: Set of message names this agent can send
@@ -53,15 +58,21 @@ class HypermediaMetaAdapter(MetaAdapter):
             agents: Initial agent address book (can be empty)
             debug: Enable debug logging
             auto_join: Automatically join workspace on initialization
+            auto_discover_workspace: Automatically discover workspace from base_uri + goal
+
+        Note:
+            Either workspace_uri OR (base_uri + goal_artifact_uri) must be provided.
+            If auto_discover_workspace=True, workspace discovery happens before joining.
         """
         # Store hypermedia configuration
-        self.workspace_uri = workspace_uri
+        self.base_uri = base_uri
+        self.goal_artifact_uri = goal_artifact_uri
         self.web_id = web_id
         self.adapter_endpoint = adapter_endpoint
         self.artifact_address = None
         self._joined = False
 
-        # Initialize parent MetaAdapter
+        # Initialize parent MetaAdapter first (sets up logger, etc.)
         systems = systems or {}
         agents = agents or {name: [('127.0.0.1', int(adapter_endpoint))]}
         capabilities = capabilities or set()
@@ -74,11 +85,27 @@ class HypermediaMetaAdapter(MetaAdapter):
             debug=debug
         )
 
+        # Now we can use self.logger and other initialized attributes
+
+        # Auto-discover workspace if requested
+        if auto_discover_workspace and base_uri and goal_artifact_uri:
+            discovered_workspace = self.discover_workspace(base_uri, goal_artifact_uri)
+            if discovered_workspace:
+                self.workspace_uri = discovered_workspace
+            else:
+                raise ValueError(f"Could not discover workspace for goal artifact: {goal_artifact_uri}")
+        else:
+            # Use provided workspace_uri or set to None
+            self.workspace_uri = workspace_uri
+
         # Auto-join workspace if requested
         if auto_join:
-            success, artifact_address = self.join_workspace()
-            if not success:
-                self.logger.error("Failed to join workspace during initialization")
+            if not self.workspace_uri:
+                self.logger.error("Cannot auto-join: no workspace_uri available. Set workspace_uri or enable auto_discover_workspace.")
+            else:
+                success, artifact_address = self.join_workspace()
+                if not success:
+                    self.logger.error("Failed to join workspace during initialization")
 
     def join_workspace(self) -> tuple[bool, Optional[str]]:
         """
@@ -170,6 +197,33 @@ class HypermediaMetaAdapter(MetaAdapter):
         except Exception as e:
             self.warning(f"Failed to discover protocol: {e}")
             return None
+
+    def discover_workspace(self, base_uri: str, goal_artifact_uri: str, max_depth: int = 5) -> Optional[str]:
+        """
+        Discover which workspace contains a goal artifact by crawling from base URI.
+        This implements true hypermedia-driven workspace discovery.
+
+        Args:
+            base_uri: Base URI to start crawling from (e.g., "http://localhost:8080/")
+            goal_artifact_uri: URI of the goal artifact
+            max_depth: Maximum depth to search (default: 5)
+
+        Returns:
+            URI of workspace containing the artifact, or None if not found
+        """
+        self.info(f"Starting workspace discovery from {base_uri}")
+        workspace_uri = HypermediaTools.discover_workspace_for_goal(
+            base_uri,
+            goal_artifact_uri,
+            max_depth
+        )
+
+        if workspace_uri:
+            self.info(f"Discovered workspace: {workspace_uri}")
+        else:
+            self.warning(f"Could not discover workspace for artifact: {goal_artifact_uri}")
+
+        return workspace_uri
 
     def discover_protocol_for_goal(self, goal_item_uri: str) -> Optional[Protocol]:
         """

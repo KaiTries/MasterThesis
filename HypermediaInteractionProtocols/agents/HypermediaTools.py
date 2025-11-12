@@ -12,6 +12,7 @@ This module provides all hypermedia-related functionality for agents:
 
 import requests
 import bspl
+from typing import Optional
 from rdflib import Graph, Namespace, Literal, URIRef, BNode
 from rdflib.namespace import RDF
 
@@ -342,6 +343,232 @@ def get_protocols_as_string(protocol_links: list[str]) -> str:
         protocols += requests.get(link).text
         protocols += "\n"
     return protocols
+
+
+# =============================================================================
+# Workspace Discovery and Crawling
+# =============================================================================
+
+def get_workspaces_in(workspace_uri: str) -> list[str]:
+    """
+    Discover sub-workspaces within a workspace.
+
+    Args:
+        workspace_uri: URI of the workspace to explore
+
+    Returns:
+        List of sub-workspace URIs (cleaned, without fragments)
+    """
+    try:
+        response = requests.get(workspace_uri)
+        if response.status_code != 200:
+            return []
+
+        graph = get_model(response.text)
+
+        # Query for contained workspaces
+        query = f"""
+        PREFIX hmas: <https://purl.org/hmas/>
+
+        SELECT ?workspace WHERE {{
+          ?workspace a hmas:Workspace .
+        }}
+        """
+
+        workspaces = []
+        for row in graph.query(query):
+            workspace_str = str(row.workspace)
+
+            # Clean up the URI: remove fragment identifier and ensure trailing slash
+            workspace_clean = clean_workspace_uri(workspace_str)
+
+            # Only include if it's a different workspace (not self)
+            workspace_uri_clean = clean_workspace_uri(workspace_uri)
+            if workspace_clean != workspace_uri_clean:
+                workspaces.append(workspace_clean)
+
+        return workspaces
+    except Exception as e:
+        print(f"Error discovering workspaces in {workspace_uri}: {e}")
+        return []
+
+
+def clean_workspace_uri(uri: str) -> str:
+    """
+    Clean a workspace URI by removing fragment identifiers and normalizing.
+
+    Args:
+        uri: Raw workspace URI (may include #fragment)
+
+    Returns:
+        Cleaned workspace URI without fragment, ending with /
+
+    Example:
+        "http://localhost:8080/workspaces/bazaar#workspace"
+        -> "http://localhost:8080/workspaces/bazaar/"
+    """
+    # Remove fragment identifier (everything after #)
+    if '#' in uri:
+        uri = uri.split('#')[0]
+
+    # Ensure it ends with /
+    if not uri.endswith('/'):
+        uri += '/'
+
+    return uri
+
+
+def get_artifacts_in(workspace_uri: str) -> list[str]:
+    """
+    Get all artifacts in a workspace.
+
+    Args:
+        workspace_uri: URI of the workspace
+
+    Returns:
+        List of artifact URIs
+    """
+    try:
+        # Check the artifacts endpoint
+        artifacts_uri = workspace_uri.rstrip('/') + '/artifacts/'
+        response = requests.get(artifacts_uri)
+        if response.status_code != 200:
+            return []
+
+        graph = get_model(response.text)
+
+        # Query for all artifacts
+        query = """
+        PREFIX hmas: <https://purl.org/hmas/>
+
+        SELECT ?artifact WHERE {
+          ?artifact a hmas:Artifact .
+        }
+        """
+
+        artifacts = []
+        for row in graph.query(query):
+            artifacts.append(str(row.artifact))
+
+        return artifacts
+    except Exception as e:
+        print(f"Error discovering artifacts in {workspace_uri}: {e}")
+        return []
+
+
+def find_workspace_containing_artifact(
+    base_uri: str,
+    goal_artifact_uri: str,
+    max_depth: int = 5,
+    _current_depth: int = 0
+) -> Optional[str]:
+    """
+    Recursively crawl workspaces to find the one containing a goal artifact.
+    This implements true hypermedia-driven discovery.
+
+    Args:
+        base_uri: Starting URI (can be root or a workspace)
+        goal_artifact_uri: URI of the artifact to find
+        max_depth: Maximum depth to search (prevent infinite loops)
+        _current_depth: Internal parameter for recursion tracking
+
+    Returns:
+        URI of workspace containing the artifact, or None if not found
+    """
+    if _current_depth >= max_depth:
+        print(f"Max depth {max_depth} reached, stopping search")
+        return None
+
+    print(f"{'  ' * _current_depth}Searching workspace: {base_uri}")
+
+    # Ensure base_uri ends with /
+    if not base_uri.endswith('/'):
+        base_uri += '/'
+
+    # Check if goal artifact is in current workspace
+    artifacts = get_artifacts_in(base_uri)
+    print(f"{'  ' * _current_depth}Found {len(artifacts)} artifacts")
+
+    for artifact in artifacts:
+        # Check if this artifact matches the goal (exact match or contains the fragment)
+        if artifact == goal_artifact_uri or goal_artifact_uri in artifact:
+            # Clean the workspace URI before returning
+            clean_uri = clean_workspace_uri(base_uri)
+            print(f"{'  ' * _current_depth}✓ Found goal artifact in workspace: {clean_uri}")
+            return clean_uri
+
+    # If not found, search sub-workspaces
+    sub_workspaces = get_workspaces_in(base_uri)
+    print(f"{'  ' * _current_depth}Found {len(sub_workspaces)} sub-workspaces")
+
+    for sub_workspace in sub_workspaces:
+        result = find_workspace_containing_artifact(
+            sub_workspace,
+            goal_artifact_uri,
+            max_depth,
+            _current_depth + 1
+        )
+        if result:
+            return result
+
+    # Not found in this branch
+    return None
+
+
+def discover_workspace_for_goal(
+    base_uri: str,
+    goal_artifact_uri: str,
+    max_depth: int = 5
+) -> Optional[str]:
+    """
+    Discover which workspace contains a goal artifact by crawling from a base URI.
+    This is the main entry point for workspace discovery.
+
+    Example:
+        # Start with just the base URL
+        workspace = discover_workspace_for_goal(
+            "http://localhost:8080/",
+            "http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact"
+        )
+        # Returns: "http://localhost:8080/workspaces/bazaar/"
+
+    Args:
+        base_uri: Base URI to start crawling from (e.g., "http://localhost:8080/")
+        goal_artifact_uri: Full URI of the goal artifact
+        max_depth: Maximum depth to search (default: 5)
+
+    Returns:
+        URI of workspace containing the artifact, or None if not found
+    """
+    print(f"\n=== Starting workspace discovery ===")
+    print(f"Base URI: {base_uri}")
+    print(f"Goal artifact: {goal_artifact_uri}")
+    print(f"Max depth: {max_depth}")
+    print()
+
+    # Try to find workspaces at the base URI first
+    workspaces = get_workspaces_in(base_uri)
+
+    if not workspaces:
+        # No workspaces at base, treat base as a workspace itself
+        print("No sub-workspaces found at base, checking base as workspace...")
+        result = find_workspace_containing_artifact(base_uri, goal_artifact_uri, max_depth)
+    else:
+        # Search through discovered workspaces
+        print(f"Found {len(workspaces)} workspaces at base URI")
+        result = None
+        for workspace in workspaces:
+            result = find_workspace_containing_artifact(workspace, goal_artifact_uri, max_depth)
+            if result:
+                break
+
+    if result:
+        print(f"\n✓ Discovery successful! Workspace: {result}")
+    else:
+        print(f"\n✗ Discovery failed. Artifact not found in any workspace.")
+
+    print("=== Workspace discovery complete ===\n")
+    return result
 
 
 # =============================================================================
