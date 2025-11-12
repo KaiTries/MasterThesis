@@ -2,10 +2,20 @@ from flask import Flask, request, jsonify
 from bspl.adapter import Adapter, MetaAdapter
 import threading
 import time
-from helpers import *
-
-JACAMO_BODY = 'https://purl.org/hmas/jacamo/Body'
-HMAS_AGENT = 'https://purl.org/hmas/Agent'
+from HypermediaTools import (
+    join_workspace,
+    leave_workspace,
+    get_protocol,
+    generate_body_metadata,
+    generate_role_metadata,
+    update_body,
+    get_model,
+    HypermediaAgent,
+    JACAMO,
+    RDF
+)
+from rdflib import Graph, URIRef
+import requests
 
 # =================================================================
 # Configuration
@@ -14,7 +24,7 @@ BAZAAR = 'http://localhost:8080/workspaces/bazaar/'
 WEB_ID = 'http://localhost:8010'
 NAME = "bazaar_agent"
 ADAPTER_ENDPOINT = 8010
-BODY_METADATA = get_body_metadata(str(ADAPTER_ENDPOINT))
+BODY_METADATA = generate_body_metadata(str(ADAPTER_ENDPOINT))
 CAPABILITIES = {"Give",}
 
 # BSPL Adapter own specifications
@@ -39,7 +49,7 @@ def callback():
     g.parse(data=turtle_data, format='turtle')
 
     agents_local = set()
-    for subj in g.subjects(RDF.type, URIRef(JACAMO_BODY)):
+    for subj in g.subjects(RDF.type, JACAMO.Body):
         # do not care about own body
         if 'body_bazaar_agent' in str(subj):
             continue
@@ -126,7 +136,7 @@ if __name__ == '__main__':
     protocol = get_protocol(BAZAAR)
     new_roles = adapter.add_protocol(protocol)
 
-    roles_rdf = body_role_metadata(address, new_roles, protocol.name)
+    roles_rdf = generate_role_metadata(address, new_roles, protocol.name)
     response = update_body(address, web_id=WEB_ID, agent_name=NAME, metadata=roles_rdf)
 
     # Start Flask in a background thread

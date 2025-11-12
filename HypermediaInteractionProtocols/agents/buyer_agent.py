@@ -1,7 +1,13 @@
 from bspl.adapter import MetaAdapter
 from bspl.protocol import Message
-from helpers import *
-from semantics_helper import *
+from HypermediaTools import (
+    join_workspace,
+    leave_workspace,
+    get_agents,
+    get_protocol,
+    get_protocol_name_from_goal_offering as get_protocol_name_from_goal_two,
+    generate_body_metadata
+)
 import time
 
 # =================================================================
@@ -16,22 +22,7 @@ SELF = [('127.0.0.1',8011)]
 adapter = MetaAdapter(name=NAME, systems={}, agents={NAME: SELF}, capabilities={"Pay",}, debug=False)
 
 def get_body_metadata():
-    return f"""
-    @prefix td: <https://www.w3.org/2019/wot/td#>.
-    @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
-    @prefix htv: <http://www.w3.org/2011/http#> .
-
-    <#artifact> 
-        td:hasActionAffordance [ a td:ActionAffordance;
-        td:name "sendMessage";
-        td:hasForm [
-            htv:methodName "GET";
-            hctl:hasTarget <http://127.0.0.1:8011/>;
-            hctl:forContentType "text/plain";
-            hctl:hasOperationType td:invokeAction;
-        ]
-    ].
-    """
+    return generate_body_metadata("8011")
 
 
 
