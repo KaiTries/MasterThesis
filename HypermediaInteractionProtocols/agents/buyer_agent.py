@@ -100,14 +100,12 @@ async def main():
 
     userInput = input("Enter product you want to buy:")
     while userInput != "exit":
-        goal_item = GOAL_ITEM_CLASS
+        goal_item = GOAL_ITEM_CLASS if userInput == 'rug' else 'http://example.org/Grill'
         adapter.goal_type=GOAL_TYPE
         discovered_workspace, discovered_artifact = adapter.discover_workspace_by_class(base_uri=BASE_URL,artifact_class=goal_item)
         if discovered_workspace:
                     adapter.workspace_uri = discovered_workspace
                     adapter.goal_artifact_uri = discovered_artifact
-                    adapter.info(f"Discovered workspace: {discovered_workspace}")
-                    adapter.info(f"Discovered artifact: {discovered_artifact}")
         else:
              continue
         adapter.join_workspace()
@@ -119,27 +117,25 @@ async def main():
             adapter.leave_workspace()
             return
 
-        adapter.info(f"✓ Discovered protocol: {protocol.name}")
+        adapter.info(f"Discovered protocol: {protocol.name}")
         adapter.info("")
 
         # ========================================
         # STEP 2: Reason My Role (NEW!)
         # ========================================
         adapter.info("STEP 2: Reasoning which role I should take...")
-        adapter.info(f"  My goal: {adapter.goal_type}")
-        adapter.info(f"  My capabilities: {adapter.capabilities}")
+        adapter.info(f"My goal: {adapter.goal_type}")
+        adapter.info(f"My capabilities: {adapter.capabilities}")
         adapter.info("")
 
-        my_role = adapter.reason_my_role(protocol)
+        my_role = adapter.reason_my_role(protocol, False)
 
         if not my_role:
-            adapter.logger.error("✗ Could not reason appropriate role")
+            adapter.logger.error("Could not reason appropriate role")
             adapter.leave_workspace()
             return
 
-        adapter.info(f"✓ Reasoned role: {my_role}")
-        adapter.info("  (No hardcoded role name needed!)")
-        adapter.info("")
+        adapter.info(f"Reasoned role: {my_role}")
 
         await asyncio.sleep(2)
 
@@ -147,23 +143,23 @@ async def main():
         # STEP 3: Propose System with Reasoned Role
         # ========================================
         adapter.info("STEP 3: Proposing system with reasoned role...")
-        adapter.info(f"  Using role: {my_role} (reasoned from goal + capabilities)")
+        adapter.info(f"Using role: {my_role} (reasoned from goal + capabilities)")
         adapter.info("")
 
         # Use high-level helper with reasoned role
         proposed_system_name = await adapter.discover_and_propose_system(
             protocol_name=protocol.name,
-            system_name="BuySystem",
-            my_role=my_role,  # ← Using reasoned role instead of hardcoded!
-            goal_item_uri=None  # Already have protocol
+            system_name=protocol.name + "System",
+            my_role=my_role,  
+            goal_item_uri=discovered_artifact  
         )
 
         if not proposed_system_name:
-            adapter.info("✗ System formation failed")
+            adapter.info("System formation failed")
             adapter.leave_workspace()
-            return
+            continue
 
-        adapter.info(f"✓ System '{proposed_system_name}' formed with my role: {my_role}")
+        adapter.info(f"System '{proposed_system_name}' formed with my role: {my_role}")
         adapter.info("")
 
         # ========================================
@@ -176,11 +172,10 @@ async def main():
         )
 
         if not system_ready:
-            adapter.info("✗ System not well-formed")
+            adapter.info("System not well-formed")
             adapter.leave_workspace()
-            return
+            continue
 
-        adapter.info("✓ System is well-formed!")
         adapter.info("")
 
         await asyncio.sleep(2)
@@ -194,19 +189,19 @@ async def main():
         adapter.info("")
 
         # First purchase
-        adapter.info("→ Purchase #1 (10$)...")
+        adapter.info("Purchase #1 (10$)...")
         await adapter.initiate_protocol(
             "Buy/Pay",
-            generate_buy_params(proposed_system_name, "rug", 10)
+            generate_buy_params(proposed_system_name, goal_item, 10)
         )
 
         await asyncio.sleep(2)
 
         # Second purchase
-        adapter.info("→ Purchase #2 (20$)...")
+        adapter.info("Purchase #2 (20$)...")
         await adapter.initiate_protocol(
             "Buy/Pay",
-            generate_buy_params(proposed_system_name, "rug", 20)
+            generate_buy_params(proposed_system_name, goal_item, 20)
         )
 
         await asyncio.sleep(3)
@@ -215,21 +210,13 @@ async def main():
         # ========================================
         # STEP 6: Clean Up
         # ========================================
-    adapter.leave_workspace()
+        adapter.leave_workspace()
 
     adapter.info("")
     adapter.info("=" * 60)
     adapter.info("AGENT COMPLETED SUCCESSFULLY")
     adapter.info("=" * 60)
     adapter.info("")
-    adapter.info("Summary:")
-    adapter.info(f"  ✓ Discovered workspace by artifact class")
-    adapter.info(f"  ✓ Discovered artifact: {adapter.goal_artifact_uri}")
-    adapter.info(f"  ✓ Discovered protocol: {protocol.name}")
-    adapter.info(f"  ✓ Reasoned my role: {my_role} (from goal + capabilities)")
-    adapter.info(f"  ✓ Completed 2 purchases")
-    adapter.info("")
-    adapter.info("No hardcoded URIs or role names - fully autonomous!")
 
 
 if __name__ == "__main__":

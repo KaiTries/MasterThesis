@@ -16,16 +16,7 @@
     {
       "name" : "supermarket_agent",
       "agent-uri" : "http://localhost:8082",
-      "callback-uri" : "http://localhost:8082/callback",
-      "body-config" : [
-        {
-          "metadata" : "conf/metadata/supermarket_agent_metadata.ttl",
-          "join" : [ "supermarket"]
-        },
-        {
-          "metadata" : "conf/metadata/supermarket_agent_metadata.ttl"
-        }
-      ]
+      "callback-uri" : "http://localhost:8082/callback"
     }
   ],
   "environment-config" : {
@@ -50,13 +41,9 @@
         "metadata" : "conf/metadata/supermarket_metadata.ttl",
         "artifacts" : [
           {
-            "name" : "rug",
-            "representation" : "conf/metadata/rug.ttl",
-            "created-by" : "supermarket_agent"
+            "name" : "grill",
+            "representation" : "conf/metadata/grill.ttl"
           }
-        ],
-        "joined-by" : [
-          "supermarket_agent"
         ]
       }
     ]

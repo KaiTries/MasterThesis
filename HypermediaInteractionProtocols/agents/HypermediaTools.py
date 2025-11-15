@@ -679,7 +679,6 @@ def find_workspace_containing_artifact_class(
         print(f"Max depth {max_depth} reached, stopping search")
         return None, None
 
-    print(f"{'  ' * _current_depth}Searching workspace: {base_uri}")
 
     # Ensure base_uri ends with /
     if not base_uri.endswith('/'):
@@ -687,17 +686,14 @@ def find_workspace_containing_artifact_class(
 
     # Check if an artifact of this class exists in current workspace
     artifacts = get_artifacts_by_class(base_uri, artifact_class)
-    print(f"{'  ' * _current_depth}Found {len(artifacts)} artifact(s) of class")
 
     if artifacts:
         # Return the first matching artifact
         clean_uri = clean_workspace_uri(base_uri)
-        print(f"{'  ' * _current_depth}✓ Found artifact of class in workspace: {clean_uri}")
         return clean_uri, artifacts[0]
 
     # If not found, search sub-workspaces
     sub_workspaces = get_workspaces_in(base_uri)
-    print(f"{'  ' * _current_depth}Found {len(sub_workspaces)} sub-workspaces")
 
     for sub_workspace in sub_workspaces:
         workspace, artifact = find_workspace_containing_artifact_class(
@@ -1113,6 +1109,7 @@ def score_role_match(
     """
     Calculate how well a role matches an agent's goal and capabilities.
 
+    # idea given by good friend gpt
     Scoring system (strict matching):
     - Goal must match for role to be viable
     - Goal match: +10
@@ -1135,10 +1132,7 @@ def score_role_match(
     # Goal alignment (REQUIRED - if goal doesn't match, role is unsuitable)
     if role_semantics.get("goal") == agent_goal:
         score += 10
-        print(f"  {role_name}: goal matches ({agent_goal}) +10")
     else:
-        # Goal mismatch - this role is not suitable for the agent's goal
-        print(f"  {role_name}: goal mismatch (want {agent_goal}, role has {role_semantics.get('goal')}) - incompatible")
         return 0  # Incompatible due to goal mismatch
 
     # Required capability match (important - weight: 5)
@@ -1146,10 +1140,7 @@ def score_role_match(
     if required_cap:
         if required_cap in agent_capabilities:
             score += 5
-            print(f"  {role_name}: has required capability ({required_cap}) +5")
         else:
-            # Can't take this role - missing required capability
-            print(f"  {role_name}: missing required capability ({required_cap}) - incompatible")
             return 0  # Incompatible
     else:
         print(f"  {role_name}: no required capability specified")
@@ -1158,9 +1149,7 @@ def score_role_match(
     for msg in role_semantics.get("sends", []):
         if msg in agent_capabilities:
             score += 1
-            print(f"  {role_name}: can send {msg} +1")
 
-    print(f"  {role_name}: total score = {score}")
     return score
 
 
@@ -1168,7 +1157,7 @@ def reason_role_for_goal(
     protocol_uri: str,
     agent_goal: str,
     agent_capabilities: set,
-    verbose: bool = True
+    verbose: bool = False
 ) -> Optional[str]:
     """
     Reason which role an agent should take in a protocol based on its goal and capabilities.

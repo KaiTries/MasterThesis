@@ -1,0 +1,15 @@
+@base <http://localhost:8080/> .
+@prefix hmas: <https://purl.org/hmas/> .
+@prefix wotsec: <https://www.w3.org/2019/wot/security#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix gr: <http://purl.org/goodrelations/v1#> .
+@prefix ex: <http://example.org/> .
+
+<workspaces/supermarket/artifacts/grill#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance, ex:Grill;
+  td:title "Grill";
+  td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
+    ].
+
+<workspaces/supermarket/artifacts/grill> a hmas:ResourceProfile;
+  hmas:isProfileOf <workspaces/supermarket/artifacts/grill#artifact> .
+

@@ -27,6 +27,7 @@ class HypermediaMetaAdapter(MetaAdapter):
     - Protocol discovery through semantic links
     - Role advertisement to other agents
     """
+    Counter = 0
 
     def __init__(
         self,
@@ -221,8 +222,9 @@ class HypermediaMetaAdapter(MetaAdapter):
         """
         try:
             protocol = HypermediaTools.get_protocol(self.workspace_uri, protocol_name)
-            self.add_protocol(protocol)
-            self.info(f"Discovered and added protocol: {protocol.name}")
+            if self.get_protocol(protocol.name) == None:
+                self.add_protocol(protocol)
+                self.info(f"Discovered and added protocol: {protocol.name}")
             return protocol
         except Exception as e:
             self.warning(f"Failed to discover protocol: {e}")
@@ -371,7 +373,7 @@ class HypermediaMetaAdapter(MetaAdapter):
         )
 
         if role:
-            self.info(f"✓ Reasoned my role: {role}")
+            self.info(f"Reasoned my role: {role}")
         else:
             self.warning("Could not reason appropriate role for this protocol")
             self.info("Possible reasons:")
@@ -481,7 +483,42 @@ class HypermediaMetaAdapter(MetaAdapter):
         }
         system_dict["roles"][my_role] = self.name
 
+
         # Propose system
+        system_name = system_name + str(self.Counter)
+        self.Counter+=1
+        proposed_name = self.propose_system(system_name, system_dict)
+        self.info(f"Proposed system '{proposed_name}' for protocol {protocol.name}")
+
+        # Offer roles to discovered agents
+        await self.offer_roles(system_dict, proposed_name, agents)
+
+        return proposed_name
+    
+    async def just_propose_system(
+        self,
+        protocol_name: str,
+        system_name: str,
+        my_role: str,
+        goal_item_uri: Optional[str] = None 
+    ):
+        protocol = self.get_protocol(protocol_name=protocol_name)
+        # Discover agents
+        agents = self.discover_agents()
+        if not agents:
+            self.warning("No other agents discovered in workspace")
+
+        # Build system dict with self in specified role
+        system_dict = {
+            "protocol": protocol.name,
+            "roles": {role: None for role in protocol.roles.keys()}
+        }
+        system_dict["roles"][my_role] = self.name
+
+
+        # Propose system
+        system_name = system_name + str(self.Counter)
+        self.Counter+=1
         proposed_name = self.propose_system(system_name, system_dict)
         self.info(f"Proposed system '{proposed_name}' for protocol {protocol.name}")
 
