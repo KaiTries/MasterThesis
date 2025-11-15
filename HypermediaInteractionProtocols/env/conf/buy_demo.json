@@ -51,7 +51,7 @@
         "artifacts" : [
           {
             "name" : "rug",
-            "representation" : "conf/metadata/rug_priced.ttl",
+            "representation" : "conf/metadata/rug.ttl",
             "created-by" : "supermarket_agent"
           }
         ],

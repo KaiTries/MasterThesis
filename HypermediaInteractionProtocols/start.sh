@@ -17,7 +17,7 @@ sleep 5
 cd ..
 
 cd agents
-python bazaar_agent.py &
+python bazaar_agent_refactored.py &
 BAZAAR_AGENT=$!
 
 

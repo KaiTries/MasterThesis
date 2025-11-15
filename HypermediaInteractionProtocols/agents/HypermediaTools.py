@@ -746,24 +746,17 @@ def discover_workspace_by_artifact_class(
     Returns:
         Tuple of (workspace_uri, artifact_uri) or (None, None) if not found
     """
-    print(f"\n=== Starting class-based workspace discovery ===")
-    print(f"Base URI: {base_uri}")
-    print(f"Artifact class: {artifact_class}")
-    print(f"Max depth: {max_depth}")
-    print()
 
     # Try to find workspaces at the base URI first
     workspaces = get_workspaces_in(base_uri)
 
     if not workspaces:
         # No workspaces at base, treat base as a workspace itself
-        print("No sub-workspaces found at base, checking base as workspace...")
         workspace, artifact = find_workspace_containing_artifact_class(
             base_uri, artifact_class, max_depth
         )
     else:
         # Search through discovered workspaces
-        print(f"Found {len(workspaces)} workspaces at base URI")
         workspace = None
         artifact = None
         for ws in workspaces:
@@ -773,14 +766,6 @@ def discover_workspace_by_artifact_class(
             if workspace:
                 break
 
-    if workspace and artifact:
-        print(f"\n✓ Discovery successful!")
-        print(f"  Workspace: {workspace}")
-        print(f"  Artifact: {artifact}")
-    else:
-        print(f"\n✗ Discovery failed. No artifact of class {artifact_class} found.")
-
-    print("=== Class-based discovery complete ===\n")
     return workspace, artifact
 
 

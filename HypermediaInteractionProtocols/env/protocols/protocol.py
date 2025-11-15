@@ -39,7 +39,7 @@ bspl_rdf = """
 <http://localhost:8005/protocols/buy_protocol#BuyerRole>
     a bspl:Role ;
     bspl:roleName "Buyer" ;
-    bspl:hasGoal gr:Buy ;
+    bspl:hasGoal gr:seeks ;
     bspl:requiresCapability "Pay" ;
     bspl:sendsMessage "Pay" ;
     bspl:receivesMessage "Give" ;

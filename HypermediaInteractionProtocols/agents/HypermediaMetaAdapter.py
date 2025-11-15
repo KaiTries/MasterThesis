@@ -79,7 +79,6 @@ class HypermediaMetaAdapter(MetaAdapter):
             Class-based discovery is the most autonomous - agent only needs to know the semantic
             type of artifact it wants, not the exact URI.
         """
-        # Store hypermedia configuration
         self.base_uri = base_uri
         self.goal_artifact_uri = goal_artifact_uri
         self.goal_artifact_class = goal_artifact_class
@@ -90,7 +89,6 @@ class HypermediaMetaAdapter(MetaAdapter):
         self.artifact_address = None
         self._joined = False
 
-        # Initialize parent MetaAdapter first (sets up logger, etc.)
         systems = systems or {}
         agents = agents or {name: [('127.0.0.1', int(adapter_endpoint))]}
         capabilities = capabilities or set()
@@ -103,12 +101,10 @@ class HypermediaMetaAdapter(MetaAdapter):
             debug=debug
         )
 
-        # Now we can use self.logger and other initialized attributes
 
         # Auto-discover workspace if requested
         if auto_discover_workspace and base_uri:
             if goal_artifact_class:
-                # Class-based discovery (most autonomous!)
                 discovered_workspace, discovered_artifact = self.discover_workspace_by_class(
                     base_uri, goal_artifact_class
                 )
@@ -291,7 +287,7 @@ class HypermediaMetaAdapter(MetaAdapter):
         workspace_uri, artifact_uri = HypermediaTools.discover_workspace_by_artifact_class(
             base_uri,
             artifact_class,
-            max_depth
+            max_depth,
         )
 
         if workspace_uri and artifact_uri:
