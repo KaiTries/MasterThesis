@@ -249,7 +249,11 @@ class MetaAdapter(Adapter):
             return self.check_capable_roles(protocol)
         else:
             self.warning(f"Protocol {protocol.name} already exists in adapter.")
-
+    
+    def get_protocol(self, protocol_name: str):
+        if protocol_name not in self.protocols:
+            return None
+        return self.protocols[protocol_name]
 
     def check_capable_roles(self, protocol: Protocol):
         roles = protocol.roles

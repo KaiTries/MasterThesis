@@ -1,135 +1,235 @@
-from bspl.adapter import MetaAdapter
-from bspl.protocol import Message
-from helpers import *
-from semantics_helper import *
+"""
+Buyer Agent with Automatic Role Reasoning
+
+This agent demonstrates the highest level of autonomy:
+1. Class-based workspace discovery (only knows artifact type, not URI)
+2. Automatic role reasoning (only knows goal, not role name)
+
+The agent only needs to know:
+- Base URL to start from
+- What type of thing it wants (ex:Rug)
+- What it wants to do with it (gr:Buy)
+- What it can do (Pay)
+
+Everything else is discovered and reasoned autonomously!
+"""
+
+from HypermediaMetaAdapter import HypermediaMetaAdapter
+import asyncio
 import time
 
+
 # =================================================================
-# Configuration
+# Configuration - Only high-level goals and capabilities!
 # =================================================================
 NAME = "BuyerAgent"
-WEB_ID = 'http://localhost:8011'
-BAZAAR_URI = 'http://localhost:8080/workspaces/bazaar/'
-GOAL_ITEM = 'http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact'
-SELF = [('127.0.0.1',8011)]
-
-adapter = MetaAdapter(name=NAME, systems={}, agents={NAME: SELF}, capabilities={"Pay",}, debug=False)
-
-def get_body_metadata():
-    return f"""
-    @prefix td: <https://www.w3.org/2019/wot/td#>.
-    @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
-    @prefix htv: <http://www.w3.org/2011/http#> .
-
-    <#artifact> 
-        td:hasActionAffordance [ a td:ActionAffordance;
-        td:name "sendMessage";
-        td:hasForm [
-            htv:methodName "GET";
-            hctl:hasTarget <http://127.0.0.1:8011/>;
-            hctl:forContentType "text/plain";
-            hctl:hasOperationType td:invokeAction;
-        ]
-    ].
-    """
+BASE_URL = 'http://localhost:8080/'
+GOAL_ITEM_CLASS = 'http://example.org/Rug'  # What I want
+GOAL_TYPE = 'http://purl.org/goodrelations/v1#seeks'  # What I want to do with it
+ADAPTER_PORT = 8011
 
 
+# =================================================================
+# Create adapter with full autonomy
+# =================================================================
+try:
+    adapter = HypermediaMetaAdapter(
+        name=NAME,
+
+        # Discovery: Find workspace with artifact of this class
+        base_uri=BASE_URL,
+        goal_artifact_class=None,
+        auto_discover_workspace=False,
+
+        # Role reasoning: Determine role from goal
+        goal_type=None, 
+        capabilities={"Pay", "HandShake"},
+        auto_reason_role=True,
+
+        web_id=f'http://localhost:{ADAPTER_PORT}',
+        adapter_endpoint=str(ADAPTER_PORT),
+        debug=False,
+        auto_join=False
+    )
+
+
+except ValueError as e:
+    print(f"✗ Failed to initialize: {e}")
+    print("\nMake sure the Yggdrasil environment is running:")
+    print("  cd HypermediaInteractionProtocols")
+    print("  ./start.sh")
+    exit(1)
 
 
 # =================================================================
 # Capabilities
-# Here we write the messages that the agent can handle
-# It is possible to just bind to messages without also binding to protocols
-# e.g. just to "Give" and not "Buy/Give". TODO: not fully tested yet.
 # =================================================================
-#TODO: fix adapter.enabled to also work with string identifiers
-@adapter.reaction("Buy/Give")
+@adapter.reaction("Give")
 async def give_reaction(msg):
-    adapter.info(f"Buy order {msg['buyID']} for item {msg['item']} with amount: {msg['money']}$ successful")
+    adapter.info(f"✓ Received item: {msg['item']} for ${msg['money']}")
     return msg
 
+@adapter.enabled('BuyTwo/Pay')
+async def test_enabled(msg):
+     msg = msg.bind(itemID=str(int(time.time())),money=10)
+     return msg
+
 # =================================================================
-# Function that returns needed parameters to execute the first message of the buy protocol
-# Currently these mappings are known but could be found in the hypermedia space as well
-# TODO: Agent should learn this from somewhere
+# Helper
 # =================================================================
-def generate_buy_params(system_id: str, item_name: str, money: int):
+def generate_buy_two_params(system_id: str, item_name: str, money: int) -> dict:
     return {
-        "system" : system_id,
-        "itemID" : item_name,
-        "buyID" : str(int(time.time())),
-        "money" : money
+        "system": system_id,
+        "firstID": str(int(time.time())),
+    }
+# =================================================================
+# Helper
+# =================================================================
+def generate_buy_params(system_id: str, item_name: str, money: int) -> dict:
+    return {
+        "system": system_id,
+        "itemID": item_name,
+        "buyID": str(int(time.time())),
+        "money": money
     }
 
 
+
 # =================================================================
-# Main function - Buyer Agent Logic
-# 1. The agent joins the bazaar workspace
-# 2. The agent gets the protocol needed from goal item
-#    TODO: currently given goal item directly
-# 3. The agent adds the protocol to its known protocols (not as a system simply as a protocol)
-#    TODO: currently using a signifier exposed by the workspace that directly returns the protocols <- better solution?
-# 4. The agent gets the agents present in the workspace and adds them to its address book
-# 5. The agent proposes a system with itself as Buyer and the rest of the roles unassigned
-#    TODO: Should be part of MetaAdapter. If we have semantics that give us our role we can use that.
-# 6. The agent offers the Seller role to all agents present in the workspace that can enact it
-# 7. If the system is well-formed (i.e. all roles assigned and we shared system details) we initiate the protocol
-#    TODO: Should be part of MetaAdapter. Need info on initial message to send
-# 8. The agent leaves the workspace and shuts down
+# Main - Fully Autonomous Agent
 # =================================================================
 async def main():
+    """
+    Fully autonomous workflow:
+    1. Workspace already discovered by class
+    2. Artifact already discovered
+    3. Discover protocol from artifact
+    4. REASON which role to take (NEW!)
+    5. Discover other agents
+    6. Propose system with reasoned role
+    7. Execute protocol
+    """
     adapter.start_in_loop()
-    success, artifact_address = join_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME, metadata=get_body_metadata())
-    if not success:
-        adapter.logger.error("Could not join the bazaar workspace")
-        success = leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)
-        adapter.info(f"Left bazaar workspace - {success}")
-        exit(1)
-    adapter.info(f"Successfully joined workspace, received artifact uri - {artifact_address}")
 
-    protocol_name = get_protocol_name_from_goal_two(BAZAAR_URI, GOAL_ITEM)
-    if protocol_name is None:
-        adapter.logger.error(f"No protocol found for goal item {GOAL_ITEM}")
-        leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)
-        adapter.info(f"Left bazaar workspace - {success}")
-        exit(1)
-    adapter.info(f"Found protocol {protocol_name} for goal item {GOAL_ITEM}")
+    userInput = input("Enter product you want to buy:")
+    while userInput != "exit":
+        goal_item = GOAL_ITEM_CLASS if userInput == 'rug' else 'http://example.org/Grill'
+        adapter.goal_type=GOAL_TYPE
+        discovered_workspace, discovered_artifact = adapter.discover_workspace_by_class(base_uri=BASE_URL,artifact_class=goal_item)
+        if discovered_workspace:
+                    adapter.workspace_uri = discovered_workspace
+                    adapter.goal_artifact_uri = discovered_artifact
+        else:
+             continue
+        adapter.join_workspace()
 
-    protocol = get_protocol(BAZAAR_URI, protocol_name)
-    adapter.add_protocol(protocol)
 
-    agents = get_agents(BAZAAR_URI, artifact_address)
-    for agent in agents:
-        adapter.upsert_agent(agent.name, agent.addresses)
-    await asyncio.sleep(5)
+        adapter.info("STEP 1: Discovering protocol from artifact...")
+        protocol = adapter.discover_protocol_for_goal(adapter.goal_artifact_uri)
+        if not protocol:
+            adapter.leave_workspace()
+            return
 
-    system_dict = {
-        "protocol": protocol,
-        "roles": {
-        "Buyer": NAME,
-        "Seller": None
-        }
-    }
-    proposed_system_name = adapter.propose_system("BuySystem", system_dict)
-    await adapter.offer_roles(system_dict, proposed_system_name, agents)
+        adapter.info(f"Discovered protocol: {protocol.name}")
+        adapter.info("")
 
-    # TODO: avoid infinite loop when all candidate reject
-    # while not adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
-    #  adapter.info("System not well-formed, cannot initiate protocol")
-    #   await asyncio.sleep(5)
+        # ========================================
+        # STEP 2: Reason My Role (NEW!)
+        # ========================================
+        adapter.info("STEP 2: Reasoning which role I should take...")
+        adapter.info(f"My goal: {adapter.goal_type}")
+        adapter.info(f"My capabilities: {adapter.capabilities}")
+        adapter.info("")
 
-    await asyncio.sleep(5)
-    if adapter.proposed_systems.get_system(proposed_system_name).is_well_formed():
-        await asyncio.sleep(5)
-        await adapter.initiate_protocol("Buy/Pay", generate_buy_params(proposed_system_name, "rug", 10))
-        await asyncio.sleep(5)
-        await adapter.initiate_protocol("Buy/Pay", generate_buy_params(proposed_system_name, "rug", 20))
-        await asyncio.sleep(5)
-    else:
-        adapter.info("System not well-formed, cannot initiate protocol")
-    success = leave_workspace(BAZAAR_URI, web_id=WEB_ID, agent_name=NAME)
-    pass
+        my_role = adapter.reason_my_role(protocol, False)
+
+        if not my_role:
+            adapter.logger.error("Could not reason appropriate role")
+            adapter.leave_workspace()
+            return
+
+        adapter.info(f"Reasoned role: {my_role}")
+
+        await asyncio.sleep(2)
+
+        # ========================================
+        # STEP 3: Propose System with Reasoned Role
+        # ========================================
+        adapter.info("STEP 3: Proposing system with reasoned role...")
+        adapter.info(f"Using role: {my_role} (reasoned from goal + capabilities)")
+        adapter.info("")
+
+        # Use high-level helper with reasoned role
+        proposed_system_name = await adapter.discover_and_propose_system(
+            protocol_name=protocol.name,
+            system_name=protocol.name + "System",
+            my_role=my_role,  
+            goal_item_uri=discovered_artifact  
+        )
+
+        if not proposed_system_name:
+            adapter.info("System formation failed")
+            adapter.leave_workspace()
+            continue
+
+        adapter.info(f"System '{proposed_system_name}' formed with my role: {my_role}")
+        adapter.info("")
+
+        # ========================================
+        # STEP 4: Wait for System Formation
+        # ========================================
+        adapter.info("STEP 4: Waiting for system to be well-formed...")
+        system_ready = await adapter.wait_for_system_formation(
+            proposed_system_name,
+            timeout=10.0
+        )
+
+        if not system_ready:
+            adapter.info("System not well-formed")
+            adapter.leave_workspace()
+            continue
+
+        adapter.info("")
+
+        await asyncio.sleep(2)
+
+        # ========================================
+        # STEP 5: Execute Protocol
+        # ========================================
+        adapter.info("STEP 5: Executing protocol...")
+        adapter.info(f"  My role: {my_role}")
+        adapter.info(f"  Protocol: {protocol.name}")
+        adapter.info("")
+
+        # First purchase
+        adapter.info("Purchase #1 (10$)...")
+        if userInput == "rug":
+            await adapter.initiate_protocol(
+                "Buy/Pay",
+                generate_buy_params(proposed_system_name, goal_item, 10)
+            )
+        else:
+            # Second purchase
+            adapter.info("Purchase #2 (20$)...")
+            await adapter.initiate_protocol(
+                "BuyTwo/HandShake",
+                generate_buy_two_params(proposed_system_name, goal_item, 20)
+            )
+
+        await asyncio.sleep(3)
+        userInput = input()
+
+        # ========================================
+        # STEP 6: Clean Up
+        # ========================================
+        adapter.leave_workspace()
+
+    adapter.info("")
+    adapter.info("=" * 60)
+    adapter.info("AGENT COMPLETED SUCCESSFULLY")
+    adapter.info("=" * 60)
+    adapter.info("")
+
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())

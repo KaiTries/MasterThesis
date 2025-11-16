@@ -5,11 +5,11 @@
 @prefix gr: <http://purl.org/goodrelations/v1#> .
 @prefix ex: <http://example.org/> .
 
-<workspaces/bazaar/artifacts/rug#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance, ex:Rug;
-  td:title "rug";
+<workspaces/supermarket/artifacts/grill#artifact> a td:Thing, hmas:Artifact, gr:ActualProductOrServiceInstance, ex:Grill;
+  td:title "Grill";
   td:hasSecurityConfiguration [ a wotsec:NoSecurityScheme
     ].
 
-<workspaces/bazaar/artifacts/rug> a hmas:ResourceProfile;
-  hmas:isProfileOf <workspaces/bazaar/artifacts/rug#artifact> .
+<workspaces/supermarket/artifacts/grill> a hmas:ResourceProfile;
+  hmas:isProfileOf <workspaces/supermarket/artifacts/grill#artifact> .
 

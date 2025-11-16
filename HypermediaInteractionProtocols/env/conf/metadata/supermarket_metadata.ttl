@@ -1,0 +1,31 @@
+@prefix td: <https://www.w3.org/2019/wot/td#>.
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix gr: <http://purl.org/goodrelations/v1#> .
+@prefix schema: <http://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix bspl: <https://purl.org/hmas/bspl/> .
+
+
+
+<#workspace> a gr:BusinessEntity;
+ rdfs:seeAlso <http://www.supermarket.com> ;
+ gr:legalName "supermarket.com Ltd."^^xsd:string ;
+ gr:offers [ a gr:Offering;
+    gr:hasBusinessFunction gr:Sell;
+    bspl:useProtocol "BuyTwo";
+    gr:hasPriceSpecification [ a gr:UnitPriceSpecification;
+        gr:hasCurrency "EUR";
+        gr:hasCurrencyValue 200.0;
+        gr:hasUnitOfMeasurement "C62";
+    ];
+    gr:includesObject [
+        a gr:TypeAndQuantityNode;
+        gr:amountOfThisGood 1.0;
+        gr:hasUnitOfMeasurement "C62";
+        gr:typeOfGood <supermarket/artifacts/grill#artifact>;
+        ];
+    ];
+
+bspl:protocol <http://localhost:8005/protocols/buy_two_protocol> .

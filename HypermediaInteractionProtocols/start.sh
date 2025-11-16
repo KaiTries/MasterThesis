@@ -20,6 +20,8 @@ cd agents
 python bazaar_agent.py &
 BAZAAR_AGENT=$!
 
+python supermarket_agent.py &
+SUPERMARKET_AGENT=$!
 
 cd ..
 # stop everything
@@ -27,4 +29,5 @@ sleep 5
 read -n1 -rsp $'Press any key to stop...\n'
 kill $ENV
 kill $BAZAAR_AGENT
+kill $SUPERMARKET_AGENT
 kill $PROTOCOL
