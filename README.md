@@ -76,7 +76,7 @@ The `HypermediaMetaAdapter` is a unified abstraction that combines BSPL protocol
 ```python
 # Agent only knows its goal and capabilities
 adapter = HypermediaMetaAdapter(
-    goal_type="http://purl.org/goodrelations/v1#Buy",  # I want to acquire
+    goal_type="http://purl.org/goodrelations/v1#seeks",  # I want to acquire
     capabilities={"Pay"}  # I can pay
 )
 
@@ -87,8 +87,8 @@ my_role = adapter.reason_my_role(protocol)  # Returns: "Buyer"
 **Role Semantics** (in protocol metadata):
 ```turtle
 <BuyerRole>
-    bspl:hasGoal gr:Buy ;              # This role is for acquiring
-    bspl:requiresCapability "Pay" ;    # Requires Pay capability
+    bspl:hasGoal gr:seeks ;              # This role is for acquiring
+    bspl:requiresCapability "Pay" ;    # Capabilities can be directly reasoned from protocol, but this makes it easier for agents
 
 <SellerRole>
     bspl:hasGoal gr:Sell ;             # This role is for providing
