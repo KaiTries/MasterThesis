@@ -4,6 +4,6 @@ BuyTwo {
 
   Buyer -> Seller: HandShake[ out firstID key]
   Seller -> Buyer: AcceptHandShake[ in firstID key, out buyID key ]
-  Buyer -> Seller: Pay[ in buyID key, out itemID key, out money]
+  Buyer -> Seller: Pay[ in firstID key, in buyID key, out itemID key, out money]
   Seller -> Buyer: Give[ in buyID key, in itemID key, in money, out item ]
 }

@@ -18,7 +18,7 @@ import time
 from rdflib import Graph
 from HypermediaTools import get_model, JACAMO, RDF, HypermediaAgent
 import requests
-
+import uuid
 
 # =================================================================
 # Configuration
@@ -33,7 +33,7 @@ adapter = HypermediaMetaAdapter(
     workspace_uri=WORKSPACE_URI,
     web_id=f'http://localhost:{ADAPTER_PORT}',
     adapter_endpoint=str(ADAPTER_PORT),
-    capabilities={"Give"},  # This agent can send Give messages
+    capabilities={"Give", "AcceptHandShake"},  # This agent can send Give messages
     debug=True,
     auto_join=True  # Automatically join workspace
 )
@@ -121,7 +121,16 @@ async def send_give(msg):
     # Bind the 'item' parameter with the requested item
     return msg.bind(item=msg['itemID'])
 
-
+@adapter.enabled("BuyTwo/AcceptHandShake")
+async def send_give(msg):
+    """
+    Automatically send Give message when enabled after receiving Pay.
+    This is the core business logic for the seller.
+    """
+    adapter.info(f"Accepting handshake")
+    id = str(uuid.uuid4())
+    # Bind the 'item' parameter with the requested item
+    return msg.bind(buyID=id)
 # =================================================================
 # Main Function
 # =================================================================
@@ -134,7 +143,7 @@ def main():
     4. (Optional) Monitor workspace for new agents
     """
     # Discover protocol from workspace
-    protocol = adapter.discover_protocol("Buy")
+    protocol = adapter.discover_protocol("BuyTwo")
     if not protocol:
         adapter.logger.error("Could not discover Buy protocol")
         adapter.leave_workspace()
@@ -149,7 +158,7 @@ def main():
     # flask_t = threading.Thread(target=flask_thread, daemon=True)
     # flask_t.start()
 
-    adapter.info("Bazaar agent ready and waiting for buyers...")
+    adapter.info("Supermarket agent ready and waiting for buyers...")
 
     # Start the adapter (blocking)
     adapter.start()

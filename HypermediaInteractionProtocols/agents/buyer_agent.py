@@ -43,7 +43,7 @@ try:
 
         # Role reasoning: Determine role from goal
         goal_type=None, 
-        capabilities={"Pay"},
+        capabilities={"Pay", "HandShake"},
         auto_reason_role=True,
 
         web_id=f'http://localhost:{ADAPTER_PORT}',
@@ -69,7 +69,19 @@ async def give_reaction(msg):
     adapter.info(f"✓ Received item: {msg['item']} for ${msg['money']}")
     return msg
 
+@adapter.enabled('BuyTwo/Pay')
+async def test_enabled(msg):
+     msg = msg.bind(itemID=str(int(time.time())),money=10)
+     return msg
 
+# =================================================================
+# Helper
+# =================================================================
+def generate_buy_two_params(system_id: str, item_name: str, money: int) -> dict:
+    return {
+        "system": system_id,
+        "firstID": str(int(time.time())),
+    }
 # =================================================================
 # Helper
 # =================================================================
@@ -80,6 +92,7 @@ def generate_buy_params(system_id: str, item_name: str, money: int) -> dict:
         "buyID": str(int(time.time())),
         "money": money
     }
+
 
 
 # =================================================================
@@ -190,19 +203,18 @@ async def main():
 
         # First purchase
         adapter.info("Purchase #1 (10$)...")
-        await adapter.initiate_protocol(
-            "Buy/Pay",
-            generate_buy_params(proposed_system_name, goal_item, 10)
-        )
-
-        await asyncio.sleep(2)
-
-        # Second purchase
-        adapter.info("Purchase #2 (20$)...")
-        await adapter.initiate_protocol(
-            "Buy/Pay",
-            generate_buy_params(proposed_system_name, goal_item, 20)
-        )
+        if userInput == "rug":
+            await adapter.initiate_protocol(
+                "Buy/Pay",
+                generate_buy_params(proposed_system_name, goal_item, 10)
+            )
+        else:
+            # Second purchase
+            adapter.info("Purchase #2 (20$)...")
+            await adapter.initiate_protocol(
+                "BuyTwo/HandShake",
+                generate_buy_two_params(proposed_system_name, goal_item, 20)
+            )
 
         await asyncio.sleep(3)
         userInput = input()
