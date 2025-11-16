@@ -27,16 +27,8 @@ Traditional multi-agent systems often rely on hardcoded agent configurations or 
 - **Protocol compliance** is ensured through BSPL formal specifications and verification
 - **Hypermedia affordances** guide all agent interactions
 
-### What Makes This Unique
-
-**True Autonomy Through Semantic Reasoning:**
 - Agents only need to know: (1) where to start, (2) what type of thing they want, (3) what they want to do with it, (4) what they can do
 - Everything else—workspace location, exact artifact URI, protocol specification, which role to take, message sequencing—is discovered and reasoned autonomously
-
-**Protocol Adaptation:**
-- The same agent code successfully handles different protocols without modification
-- Demonstrated with Buy (simple 2-message) and BuyTwo (extended 4-message with handshake)
-- Agents discover protocol requirements at runtime and adapt their behavior accordingly
 
 The system is particularly suited for scenarios requiring flexible, decentralized coordination between autonomous agents, such as e-commerce transactions, supply chain coordination, or any multi-party business process where protocols may vary across different contexts.
 
@@ -114,39 +106,11 @@ my_role = adapter.reason_my_role(protocol)  # Returns: "Buyer"
     bspl:requiresCapability "Give" ;   # Requires Give capability
 ```
 
-**Benefits:**
-- ✅ No hardcoded role names
-- ✅ Same agent code works for different goals (buy vs sell)
-- ✅ Protocol-agnostic (works across different protocols)
-- ✅ Self-validating (won't take incompatible roles)
-
 ### Class-Based Artifact Discovery
-
-**The Innovation:** Agents discover artifacts by their semantic type, not exact URIs.
-
-**Traditional Approach (Brittle):**
-```python
-# Agent needs exact path - breaks if artifact moves
-artifact = "http://localhost:8080/workspaces/bazaar/artifacts/rug#artifact"
-```
-
-**Semantic Approach (Autonomous):**
-```python
-# Agent only knows the type - finds any matching artifact
-goal_artifact_class = "http://example.org/Rug"
-```
-
-**Discovery Process:**
 1. Start at base URI (e.g., `http://localhost:8080/`)
 2. Crawl through workspaces using hypermedia links
 3. Query each workspace for artifacts of the semantic class
 4. Return workspace + artifact when found
-
-**Benefits:**
-- ✅ No hardcoded URIs or paths
-- ✅ Works if artifacts move between workspaces
-- ✅ Finds any artifact matching the semantic type
-- ✅ True hypermedia-driven navigation (HATEOAS)
 
 ### Role Negotiation Metaprotocol
 
@@ -181,8 +145,8 @@ sequenceDiagram
 │                 Agent Application                   │
 ├─────────────────────────────────────────────────────┤
 │         HypermediaMetaAdapter Layer                 │
-│  • Semantic Role Reasoning (NEW!)                   │
-│  • Class-Based Discovery (NEW!)                     │
+│  • Semantic Role Reasoning                          │
+│  • Class-Based Discovery                            │
 │  • Workspace Discovery                              │
 │  • Role Negotiation                                 │
 │  • Dynamic System Management                        │
@@ -200,21 +164,6 @@ sequenceDiagram
   [Other Agents]          [Hypermedia Environment]
 ```
 
-## Autonomy Levels
-
-The system demonstrates **progressive autonomy** through four levels:
-
-| Level | Agent Knows | Agent Discovers | Autonomy |
-|-------|-------------|-----------------|----------|
-| **1. Hardcoded** | Workspace path + Artifact URI + Role name | Nothing | ⭐️ |
-| **2. URI Discovery** | Base + Artifact URI + Role name | Workspace location | ⭐️⭐️ |
-| **3. Class Discovery** | Base + Artifact class + Role name | Workspace + Artifact URI | ⭐️⭐️⭐️ |
-| **4. Full Autonomy** | **Base + Artifact class + Goal** | **Workspace + Artifact + Role** | **⭐️⭐️⭐️⭐️⭐️** |
-
-**Level 4** represents full autonomy - the agent only needs high-level goals and capabilities, discovering everything else through semantic reasoning.
-
-See [AUTONOMY_EVOLUTION.md](HypermediaInteractionProtocols/agents/AUTONOMY_EVOLUTION.md) for detailed progression.
-
 ## Getting Started
 
 ### Prerequisites
@@ -231,7 +180,7 @@ See [AUTONOMY_EVOLUTION.md](HypermediaInteractionProtocols/agents/AUTONOMY_EVOLU
 pip install -r requirements.txt
 ```
 
-2. Build and add the environment provider (Yggdrasil)
+2. Build and add the environment provider (Yggdrasil) NOT NEEDED ANYMORE BINARY IS ADDED TO ENV
 
 ```bash
 cd yggdrasil
@@ -246,128 +195,11 @@ mv yggdrasil/build/libs/yggdrasil-0.0.0-SNAPSHOT-all.jar HypermediaInteractionPr
 cd bspl
 pip install -e .
 ```
-
-## Building Fully Autonomous Agents
-
-### The Recommended Approach: Full Autonomy
-
-Create agents that discover and reason about everything autonomously:
-
-```python
-from HypermediaMetaAdapter import HypermediaMetaAdapter
-import asyncio
-
-# Agent configuration - goals set dynamically at runtime!
-adapter = HypermediaMetaAdapter(
-    name="BuyerAgent",
-    base_uri="http://localhost:8080/",  # Just the entry point
-
-    # Goals set to None - determined at runtime based on user input
-    goal_type=None,  # Will be set to gr:seeks when user requests purchase
-    goal_artifact_class=None,  # Will be ex:Rug or ex:Grill based on input
-
-    # Capabilities: What this agent can do
-    capabilities={"Pay", "HandShake"},
-
-    adapter_endpoint="8011",
-    auto_discover_workspace=False,  # Manual control of discovery
-    auto_reason_role=True,  # Automatic role reasoning enabled
-    auto_join=False  # Manual workspace joining
-)
-
-# Define message handlers
-@adapter.reaction("Give")
-async def handle_give(msg):
-    adapter.info(f"✓ Received item: {msg['item']} for ${msg['money']}")
-    return msg
-
-@adapter.enabled('BuyTwo/Pay')
-async def handle_pay_enabled(msg):
-    # Called when Pay message becomes enabled in BuyTwo protocol
-    msg = msg.bind(itemID=str(int(time.time())), money=10)
-    return msg
-
-# Autonomous workflow
-async def main():
-    adapter.start_in_loop()
-
-    user_input = input("Enter product you want to buy (rug/grill): ")
-
-    # Set goal dynamically based on user input
-    goal_item = 'http://example.org/Rug' if user_input == 'rug' else 'http://example.org/Grill'
-    adapter.goal_type = 'http://purl.org/goodrelations/v1#seeks'
-
-    # Discover workspace containing the desired artifact class
-    discovered_workspace, discovered_artifact = adapter.discover_workspace_by_class(
-        base_uri="http://localhost:8080/",
-        artifact_class=goal_item
-    )
-
-    adapter.workspace_uri = discovered_workspace
-    adapter.goal_artifact_uri = discovered_artifact
-    adapter.join_workspace()
-
-    # Discover protocol from artifact
-    protocol = adapter.discover_protocol_for_goal(discovered_artifact)
-
-    # Reason which role to take (not hardcoded!)
-    my_role = adapter.reason_my_role(protocol)  # Returns: "Buyer"
-
-    # Propose system with reasoned role
-    system_name = await adapter.discover_and_propose_system(
-        protocol_name=protocol.name,
-        system_name=protocol.name + "System",
-        my_role=my_role,  # ← Reasoned, not hardcoded!
-        goal_item_uri=discovered_artifact
-    )
-
-    # Wait for system formation
-    if await adapter.wait_for_system_formation(system_name, timeout=10.0):
-        # Initiate appropriate protocol (Buy or BuyTwo)
-        if protocol.name == "Buy":
-            await adapter.initiate_protocol("Buy/Pay", {
-                "system": system_name,
-                "buyID": str(int(time.time())),
-                "itemID": goal_item,
-                "money": 10
-            })
-        else:  # BuyTwo
-            await adapter.initiate_protocol("BuyTwo/HandShake", {
-                "system": system_name,
-                "firstID": str(int(time.time()))
-            })
-
-    await asyncio.sleep(3)
-    adapter.leave_workspace()
-
-asyncio.run(main())
-```
-
-### What the Agent Discovers Autonomously
-
-1. ✅ **Workspace location** - Crawls from base URI to find workspace containing desired artifact type
-2. ✅ **Artifact URI** - Queries workspaces for artifacts of class `ex:Rug` or `ex:Grill`
-3. ✅ **Protocol** - Discovers Buy or BuyTwo protocol linked from the artifact
-4. ✅ **Role to take** - Reasons it should be "Buyer" (goal=gr:seeks, capabilities=Pay/HandShake)
-5. ✅ **Other agents** - Discovers appropriate seller agent in workspace
-6. ✅ **System formation** - Negotiates roles and forms enactable system
-7. ✅ **Protocol adaptation** - Handles different message sequences without code changes
-
-### Key Benefits
-
-- 🤖 **True autonomy** - no hardcoded URIs, protocol names, or role names
-- 🔍 **Semantic discovery** - finds resources by meaning, not path
-- 🧠 **Intelligent reasoning** - determines appropriate roles automatically
-- 🔄 **Protocol adaptation** - same agent code handles different protocols
-- 🎯 **Minimal code** - framework handles discovery, reasoning, and negotiation
-- 📊 **Formal verification** - BSPL ensures protocol correctness
-- 🌐 **Standards-based** - uses W3C standards (RDF, SPARQL, Thing Descriptions)
-
 ### Example Agents
 
 See these complete examples:
 
-- **`buyer_agent.py`** - Fully autonomous buyer demonstrating Level 4 autonomy ⭐ **MAIN DEMO**
+- **`buyer_agent.py`** - Fully autonomous buyer 
 - **`bazaar_agent.py`** - Seller agent for the bazaar workspace (Buy protocol)
 - **`supermarket_agent.py`** - Seller agent for the supermarket workspace (BuyTwo protocol)
 
