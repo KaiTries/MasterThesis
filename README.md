@@ -19,20 +19,26 @@ This project presents a novel approach to building **fully autonomous multi-agen
 Traditional multi-agent systems often rely on hardcoded agent configurations or centralized orchestration. This project introduces a **fully decentralized, autonomous approach** where:
 
 - **Agents discover workspaces** by semantically crawling from a base URL - no hardcoded paths
-- **Agents discover artifacts** by their semantic class (e.g., `ex:Rug`) - no exact URIs needed
+- **Agents discover artifacts** by their semantic class (e.g., `ex:Rug`, `ex:Grill`) - no exact URIs needed
 - **Agents discover protocols** through hypermedia traversal from goal artifacts
 - **Agents reason about roles** based on their goals and capabilities - no hardcoded role names
+- **Agents adapt to different protocols** automatically - same code handles Buy (2 messages) and BuyTwo (4 messages with handshake)
 - **Dynamic role negotiation** allows agents to form systems at runtime through a universal metaprotocol
-- **Protocol compliance** is ensured through BSPL formal specifications
+- **Protocol compliance** is ensured through BSPL formal specifications and verification
 - **Hypermedia affordances** guide all agent interactions
 
 ### What Makes This Unique
 
 **True Autonomy Through Semantic Reasoning:**
 - Agents only need to know: (1) where to start, (2) what type of thing they want, (3) what they want to do with it, (4) what they can do
-- Everything else—workspace location, exact artifact URI, protocol, which role to take—is discovered and reasoned autonomously
+- Everything else—workspace location, exact artifact URI, protocol specification, which role to take, message sequencing—is discovered and reasoned autonomously
 
-The system is particularly suited for scenarios requiring flexible, decentralized coordination between autonomous agents, such as e-commerce transactions, supply chain coordination, or any multi-party business process.
+**Protocol Adaptation:**
+- The same agent code successfully handles different protocols without modification
+- Demonstrated with Buy (simple 2-message) and BuyTwo (extended 4-message with handshake)
+- Agents discover protocol requirements at runtime and adapt their behavior accordingly
+
+The system is particularly suited for scenarios requiring flexible, decentralized coordination between autonomous agents, such as e-commerce transactions, supply chain coordination, or any multi-party business process where protocols may vary across different contexts.
 
 ## Key Concepts
 
@@ -50,6 +56,19 @@ Buy {
   parameters out buyID key, out itemID key, out item, out money
 
   Buyer -> Seller: Pay[out buyID key, out itemID key, out money]
+  Seller -> Buyer: Give[in buyID key, in itemID key, in money, out item]
+}
+```
+
+**Example - BuyTwo Protocol (with handshake):**
+```bspl
+BuyTwo {
+  roles Buyer, Seller
+  parameters out firstID key, out buyID key, out itemID key, out item, out money
+
+  Buyer -> Seller: HandShake[out firstID key]
+  Seller -> Buyer: AcceptHandShake[in firstID key, out buyID key]
+  Buyer -> Seller: Pay[in firstID key, in buyID key, out itemID key, out money]
   Seller -> Buyer: Give[in buyID key, in itemID key, in money, out item]
 }
 ```
@@ -238,37 +257,58 @@ Create agents that discover and reason about everything autonomously:
 from HypermediaMetaAdapter import HypermediaMetaAdapter
 import asyncio
 
-# Agent configuration - only high-level goals!
+# Agent configuration - goals set dynamically at runtime!
 adapter = HypermediaMetaAdapter(
     name="BuyerAgent",
+    base_uri="http://localhost:8080/",  # Just the entry point
 
-    # Discovery: Find workspace + artifact by semantic class
-    base_uri="http://localhost:8080/",           # Just the entry point
-    goal_artifact_class="http://example.org/Rug", # Semantic type (not exact URI!)
-    auto_discover_workspace=True,
+    # Goals set to None - determined at runtime based on user input
+    goal_type=None,  # Will be set to gr:seeks when user requests purchase
+    goal_artifact_class=None,  # Will be ex:Rug or ex:Grill based on input
 
-    # Role Reasoning: Determine role from goal + capabilities
-    goal_type="http://purl.org/goodrelations/v1#Buy",  # What I want to do
-    capabilities={"Pay"},                              # What I can do
-    auto_reason_role=True,                             # Reason my role!
+    # Capabilities: What this agent can do
+    capabilities={"Pay", "HandShake"},
 
-    web_id="http://localhost:8011",
     adapter_endpoint="8011",
-    auto_join=True
+    auto_discover_workspace=False,  # Manual control of discovery
+    auto_reason_role=True,  # Automatic role reasoning enabled
+    auto_join=False  # Manual workspace joining
 )
 
-# Define message handler
+# Define message handlers
 @adapter.reaction("Give")
 async def handle_give(msg):
-    adapter.info(f"✓ Received item: {msg['item']}")
+    adapter.info(f"✓ Received item: {msg['item']} for ${msg['money']}")
+    return msg
+
+@adapter.enabled('BuyTwo/Pay')
+async def handle_pay_enabled(msg):
+    # Called when Pay message becomes enabled in BuyTwo protocol
+    msg = msg.bind(itemID=str(int(time.time())), money=10)
     return msg
 
 # Autonomous workflow
 async def main():
     adapter.start_in_loop()
 
-    # Discover protocol from discovered artifact
-    protocol = adapter.discover_protocol_for_goal(adapter.goal_artifact_uri)
+    user_input = input("Enter product you want to buy (rug/grill): ")
+
+    # Set goal dynamically based on user input
+    goal_item = 'http://example.org/Rug' if user_input == 'rug' else 'http://example.org/Grill'
+    adapter.goal_type = 'http://purl.org/goodrelations/v1#seeks'
+
+    # Discover workspace containing the desired artifact class
+    discovered_workspace, discovered_artifact = adapter.discover_workspace_by_class(
+        base_uri="http://localhost:8080/",
+        artifact_class=goal_item
+    )
+
+    adapter.workspace_uri = discovered_workspace
+    adapter.goal_artifact_uri = discovered_artifact
+    adapter.join_workspace()
+
+    # Discover protocol from artifact
+    protocol = adapter.discover_protocol_for_goal(discovered_artifact)
 
     # Reason which role to take (not hardcoded!)
     my_role = adapter.reason_my_role(protocol)  # Returns: "Buyer"
@@ -276,19 +316,28 @@ async def main():
     # Propose system with reasoned role
     system_name = await adapter.discover_and_propose_system(
         protocol_name=protocol.name,
-        system_name="BuySystem",
-        my_role=my_role  # ← Reasoned, not hardcoded!
+        system_name=protocol.name + "System",
+        my_role=my_role,  # ← Reasoned, not hardcoded!
+        goal_item_uri=discovered_artifact
     )
 
-    # Wait for system formation and execute
+    # Wait for system formation
     if await adapter.wait_for_system_formation(system_name, timeout=10.0):
-        await adapter.initiate_protocol("Buy/Pay", {
-            "system": system_name,
-            "buyID": "order_123",
-            "itemID": "rug",
-            "money": 100
-        })
+        # Initiate appropriate protocol (Buy or BuyTwo)
+        if protocol.name == "Buy":
+            await adapter.initiate_protocol("Buy/Pay", {
+                "system": system_name,
+                "buyID": str(int(time.time())),
+                "itemID": goal_item,
+                "money": 10
+            })
+        else:  # BuyTwo
+            await adapter.initiate_protocol("BuyTwo/HandShake", {
+                "system": system_name,
+                "firstID": str(int(time.time()))
+            })
 
+    await asyncio.sleep(3)
     adapter.leave_workspace()
 
 asyncio.run(main())
@@ -296,54 +345,69 @@ asyncio.run(main())
 
 ### What the Agent Discovers Autonomously
 
-1. ✅ **Workspace location** - Crawls from base URI to find workspace containing rug
-2. ✅ **Artifact URI** - Queries workspaces for artifacts of class `ex:Rug`
-3. ✅ **Protocol** - Discovers Buy protocol linked from the rug artifact
-4. ✅ **Role to take** - Reasons it should be "Buyer" (goal=Buy, capability=Pay)
-5. ✅ **Other agents** - Discovers seller agent in workspace
+1. ✅ **Workspace location** - Crawls from base URI to find workspace containing desired artifact type
+2. ✅ **Artifact URI** - Queries workspaces for artifacts of class `ex:Rug` or `ex:Grill`
+3. ✅ **Protocol** - Discovers Buy or BuyTwo protocol linked from the artifact
+4. ✅ **Role to take** - Reasons it should be "Buyer" (goal=gr:seeks, capabilities=Pay/HandShake)
+5. ✅ **Other agents** - Discovers appropriate seller agent in workspace
 6. ✅ **System formation** - Negotiates roles and forms enactable system
+7. ✅ **Protocol adaptation** - Handles different message sequences without code changes
 
 ### Key Benefits
 
-- 🎯 **~42% less code** compared to manual approach
-- 🤖 **True autonomy** - no hardcoded URIs or role names
+- 🤖 **True autonomy** - no hardcoded URIs, protocol names, or role names
 - 🔍 **Semantic discovery** - finds resources by meaning, not path
 - 🧠 **Intelligent reasoning** - determines appropriate roles automatically
-- 🔄 **Flexible & reusable** - same code works for different goals
-- ✨ **Production-ready** - comprehensive error handling and logging
+- 🔄 **Protocol adaptation** - same agent code handles different protocols
+- 🎯 **Minimal code** - framework handles discovery, reasoning, and negotiation
+- 📊 **Formal verification** - BSPL ensures protocol correctness
+- 🌐 **Standards-based** - uses W3C standards (RDF, SPARQL, Thing Descriptions)
 
 ### Example Agents
 
 See these complete examples:
 
-- **`buyer_agent_with_role_reasoning.py`** - Full autonomy (Level 4) ⭐ **RECOMMENDED**
-- **`buyer_agent_auto_discovery.py`** - Class-based discovery (Level 3)
-- **`buyer_agent_with_discovery.py`** - URI-based discovery (Level 2)
-- **`buyer_agent_refactored.py`** - Hardcoded (Level 1)
+- **`buyer_agent.py`** - Fully autonomous buyer demonstrating Level 4 autonomy ⭐ **MAIN DEMO**
+- **`bazaar_agent.py`** - Seller agent for the bazaar workspace (Buy protocol)
+- **`supermarket_agent.py`** - Seller agent for the supermarket workspace (BuyTwo protocol)
 
 ## Demo Scenario
 
 ### Motivating Scenario
 
-> An AI agent needs to purchase an item (a rug) in a decentralized marketplace. The agent starts with minimal knowledge:
+> An AI agent needs to purchase items in a decentralized multi-marketplace environment. The agent starts with minimal knowledge:
 > - An entry point URL (`http://localhost:8080/`)
-> - The semantic type of item wanted (`ex:Rug`)
-> - Its goal (`gr:Buy` - to acquire/purchase)
-> - Its capabilities (`Pay` - can send payment)
+> - The semantic type of item wanted (`ex:Rug` or `ex:Grill`)
+> - Its goal (`gr:seeks` - to acquire/purchase)
+> - Its capabilities (`Pay`, `HandShake` - can send payment and perform handshake)
 >
 > From just this information, the agent autonomously:
-> 1. Discovers which workspace contains rugs
-> 2. Finds the specific rug artifact
-> 3. Discovers the Buy protocol
+> 1. Discovers which workspace contains the desired item type
+> 2. Finds the specific artifact
+> 3. Discovers the appropriate protocol (Buy or BuyTwo)
 > 4. Reasons it should take the Buyer role
-> 5. Finds and negotiates with a seller
-> 6. Completes the purchase
+> 5. Finds and negotiates with the appropriate seller
+> 6. Adapts to different protocol requirements and completes the purchase
 
-This demonstrates **true autonomous behavior** - the agent navigates and reasons using only semantic information.
+This demonstrates **true autonomous behavior** - the agent navigates, adapts to different protocols, and reasons using only semantic information.
+
+### Two-Workspace Scenario
+
+The demo environment includes two distinct marketplaces:
+
+**Bazaar Workspace** (`ex:Rug` artifacts)
+- Simple **Buy** protocol (2 messages: Pay → Give)
+- Seller agent with `Give` capability
+
+**Supermarket Workspace** (`ex:Grill` artifacts)
+- Extended **BuyTwo** protocol (4 messages: HandShake → AcceptHandShake → Pay → Give)
+- Seller agent with `Give` and `AcceptHandShake` capabilities
+
+The buyer agent must discover which workspace has the desired item and adapt to that workspace's protocol **without any code changes**.
 
 ### How to Run the Demo
 
-1. Start the environment and bazaar agent:
+1. Start the environment and seller agents:
 
 ```bash
 cd HypermediaInteractionProtocols
@@ -353,25 +417,33 @@ cd HypermediaInteractionProtocols
 This starts:
 - **Yggdrasil** (hypermedia environment on port 8080)
 - **Protocol Server** (serves protocol metadata on port 8005)
-- **Bazaar Agent** (seller agent on port 8010)
+- **Bazaar Agent** (seller for rugs on port 8010)
+- **Supermarket Agent** (seller for grills on port 8013)
 
-2. Open a new terminal and start the fully autonomous buyer agent:
+2. Open a new terminal and start the autonomous buyer agent:
 
 ```bash
 cd HypermediaInteractionProtocols/agents
-python buyer_agent_with_role_reasoning.py
+python buyer_agent.py
 ```
+
+3. When prompted, enter the item you want to buy:
+   - Type `rug` to purchase from the bazaar (uses Buy protocol)
+   - Type `grill` to purchase from the supermarket (uses BuyTwo protocol)
+   - Type `exit` to quit
 
 ### What Happens in the Demo
 
+**For Rug Purchase (Bazaar/Buy Protocol):**
+
 **Discovery Phase:**
 1. **Workspace Discovery**: Agent crawls from `http://localhost:8080/` to find workspace containing `ex:Rug`
-2. **Artifact Discovery**: Agent queries workspace and finds the rug artifact URI
+2. **Artifact Discovery**: Agent queries bazaar workspace and finds the rug artifact URI
 3. **Protocol Discovery**: Agent discovers Buy protocol linked from the rug
 4. **Agent Discovery**: Agent finds bazaar_agent (seller) in workspace
 
 **Reasoning Phase:**
-5. **Role Reasoning**: Agent reasons it should be "Buyer" based on goal (`gr:Buy`) and capability (`Pay`)
+5. **Role Reasoning**: Agent reasons it should be "Buyer" based on goal (`gr:seeks`) and capability (`Pay`)
 6. **Role Validation**: Agent validates it has required capabilities for Buyer role
 
 **Collaboration Phase:**
@@ -385,12 +457,20 @@ python buyer_agent_with_role_reasoning.py
 12. **Transaction Completion**: Seller responds with Give message
 13. **Cleanup**: Buyer leaves workspace
 
+**For Grill Purchase (Supermarket/BuyTwo Protocol):**
+
+The workflow is identical, except:
+- Discovers **supermarket** workspace with `ex:Grill` artifacts
+- Discovers **BuyTwo** protocol (with handshake requirement)
+- Negotiates with **supermarket_agent**
+- Executes **4-message protocol**: HandShake → AcceptHandShake → Pay → Give
+
 **Console Output** shows:
 - Workspace discovery progress (crawling, querying)
-- Artifact discovery (finding rug by semantic class)
+- Artifact discovery (finding item by semantic class)
 - Role reasoning steps (goal matching, capability validation)
 - Role negotiation messages
-- Protocol messages (Pay/Give)
+- Protocol messages (varies by protocol)
 - Transaction completion
 
 ### Key Features Demonstrated
@@ -433,70 +513,75 @@ BSPL ensures correct execution:
 
 ```
 MasterThesis/
-├── README.md                      # This file
+├── README.md                          # This file
 ├── requirements.txt
 │
-├── bspl/                          # BSPL core library
+├── paper/                             # Master's thesis LaTeX source
+│   ├── 02_implementation.tex          # Implementation chapter
+│   ├── 07_evaluation.tex              # Evaluation chapter
+│   └── ...
+│
+├── bspl/                              # BSPL core library
 │   ├── src/bspl/
 │   │   ├── adapter/
-│   │   │   ├── core.py            # Base Adapter
-│   │   │   ├── meta_adapter.py    # MetaAdapter with role negotiation
+│   │   │   ├── core.py                # Base Adapter
+│   │   │   ├── meta_adapter.py        # MetaAdapter with role negotiation
 │   │   │   └── ...
-│   │   ├── protocol.py            # Protocol classes
-│   │   └── verification/          # Protocol verification
-│   └── samples/                   # Sample BSPL protocols
+│   │   ├── protocol.py                # Protocol classes
+│   │   └── verification/              # Protocol verification
+│   └── samples/                       # Sample BSPL protocols
 │
-├── HypermediaInteractionProtocols/ # Implementation
+├── HypermediaInteractionProtocols/    # Implementation
 │   ├── agents/
-│   │   ├── HypermediaMetaAdapter.py           # Unified adapter ⭐
-│   │   ├── HypermediaTools.py                 # Discovery & reasoning utilities
-│   │   │
-│   │   ├── buyer_agent_with_role_reasoning.py # Level 4: Full autonomy ⭐
-│   │   ├── buyer_agent_auto_discovery.py      # Level 3: Class discovery
-│   │   ├── buyer_agent_with_discovery.py      # Level 2: URI discovery
-│   │   ├── buyer_agent_refactored.py          # Level 1: Hardcoded
-│   │   │
-│   │   ├── bazaar_agent.py                    # Seller agent
-│   │   │
-│   │   ├── test_role_reasoning.py             # Role reasoning tests
-│   │   ├── test_workspace_discovery.py        # Discovery tests
-│   │   │
-│   │   └── [Documentation files - see below]
+│   │   ├── HypermediaMetaAdapter.py   # Unified adapter framework ⭐
+│   │   ├── HypermediaTools.py         # Discovery & reasoning utilities
+│   │   ├── buyer_agent.py             # Autonomous buyer agent (demo) ⭐
+│   │   ├── bazaar_agent.py            # Seller agent (Buy protocol)
+│   │   └── supermarket_agent.py       # Seller agent (BuyTwo protocol)
 │   │
 │   ├── env/
 │   │   ├── protocols/
-│   │   │   ├── buy.bspl                       # Buy protocol spec
-│   │   │   └── protocol.py                    # Protocol server (with role semantics)
-│   │   ├── conf/metadata/                     # Semantic metadata
-│   │   │   ├── rug.ttl                        # Rug artifact (with ex:Rug class)
-│   │   │   └── ...
-│   │   └── yggdrasil-*.jar                    # Hypermedia environment
+│   │   │   ├── buy.bspl               # Buy protocol spec
+│   │   │   ├── buy_two.bspl           # BuyTwo protocol spec (with handshake)
+│   │   │   └── protocol.py            # Protocol server (serves metadata)
+│   │   ├── conf/
+│   │   │   ├── buy_demo.json          # Environment configuration
+│   │   │   └── metadata/              # Semantic metadata (RDF/Turtle)
+│   │   │       ├── rug.ttl            # Rug artifact metadata
+│   │   │       ├── grill.ttl          # Grill artifact metadata
+│   │   │       └── ...
+│   │   └── yggdrasil-*.jar            # Hypermedia environment
 │   │
-│   └── start.sh                               # Startup script
+│   └── start.sh                       # Demo startup script
 │
-└── yggdrasil/                     # Hypermedia environment source
+└── yggdrasil/                         # Yggdrasil hypermedia platform source
 ```
 
 ## Documentation
 
-### Guides
+### Academic Documentation
 
-- **[AUTONOMY_EVOLUTION.md](HypermediaInteractionProtocols/agents/AUTONOMY_EVOLUTION.md)** - Progression from hardcoded to fully autonomous
-- **[CLASS_BASED_DISCOVERY.md](HypermediaInteractionProtocols/agents/CLASS_BASED_DISCOVERY.md)** - Semantic artifact discovery guide
-- **[ROLE_REASONING_COMPLETE.md](HypermediaInteractionProtocols/agents/ROLE_REASONING_COMPLETE.md)** - Semantic role reasoning implementation
-- **[WORKSPACE_DISCOVERY.md](HypermediaInteractionProtocols/agents/WORKSPACE_DISCOVERY.md)** - Autonomous workspace crawling
+The implementation is documented in detail in the master's thesis:
 
-### Implementation Details
+- **`paper/02_implementation.tex`** - Complete implementation documentation including:
+  - Layer 1: Protocol Engine (BSPL Adapter and MetaAdapter)
+  - Layer 2: Hypermedia Coordination Layer (HypermediaMetaAdapter and HypermediaTools)
+  - Layer 3: Agent-Level Implementation
+  - Integration with Yggdrasil Platform
 
-- **[CLASS_BASED_DISCOVERY_SUMMARY.md](HypermediaInteractionProtocols/agents/CLASS_BASED_DISCOVERY_SUMMARY.md)** - Quick reference for class-based discovery
-- **[SEMANTIC_ROLE_REASONING.md](HypermediaInteractionProtocols/agents/SEMANTIC_ROLE_REASONING.md)** - Design and algorithm details
-- **[IMPLEMENTATION_COMPLETE.md](HypermediaInteractionProtocols/agents/IMPLEMENTATION_COMPLETE.md)** - Class-based discovery implementation
-- **[TROUBLESHOOTING.md](HypermediaInteractionProtocols/agents/TROUBLESHOOTING.md)** - Common issues and solutions
+- **`paper/07_evaluation.tex`** - Comprehensive evaluation including:
+  - Demonstration scenario with two workspaces
+  - Agent implementation analysis
+  - Framework capability assessment
+  - Critical analysis of limitations
+  - Comparison to alternative approaches
 
-### Legacy/Reference
+### Code Documentation
 
-- **[REFACTORING_GUIDE.md](HypermediaInteractionProtocols/agents/REFACTORING_GUIDE.md)** - Migration from MetaAdapter to HypermediaMetaAdapter
-- **[BUGFIX_INITIALIZATION_ORDER.md](HypermediaInteractionProtocols/agents/BUGFIX_INITIALIZATION_ORDER.md)** - Bug fixes during development
+- **`HypermediaMetaAdapter.py`** - Main framework class with inline documentation
+- **`HypermediaTools.py`** - Discovery and reasoning utilities with detailed docstrings
+- **`buyer_agent.py`** - Complete example with extensive comments
+- **`bspl/`** - BSPL library with protocol samples and verification tools
 
 ## Key Innovations
 
@@ -530,10 +615,12 @@ HypermediaMetaAdapter provides single coherent abstraction:
 This project demonstrates:
 
 1. **Autonomous Agent Behavior** - Agents navigate and reason using only semantic information
-2. **Semantic Web Integration** - Practical use of RDF, SPARQL, and semantic ontologies for agent coordination
-3. **Protocol Compliance** - Formal verification combined with autonomous discovery
-4. **Decentralized Coordination** - No central authority, pure peer-to-peer negotiation
-5. **Progressive Autonomy** - Clear path from hardcoded to fully autonomous agents
+2. **Protocol Adaptation** - Same agent code handles different protocols discovered at runtime (Buy vs BuyTwo)
+3. **Semantic Web Integration** - Practical use of RDF, SPARQL, and W3C Thing Descriptions for agent coordination
+4. **Formal Protocol Verification** - BSPL verification ensures enactability and deadlock-freedom
+5. **Semantic Role Reasoning** - Goal and capability-based role selection without hardcoded bindings
+6. **Decentralized Coordination** - No central authority, pure peer-to-peer negotiation via metaprotocol
+7. **Hypermedia-Driven Discovery** - True HATEOAS navigation for autonomous workspace and artifact discovery
 
 ## Further Reading
 
