@@ -7,7 +7,6 @@ This project presents a novel approach to building **fully autonomous multi-agen
 - [Overview](#overview)
 - [Key Concepts](#key-concepts)
 - [Architecture](#architecture)
-- [Autonomy Levels](#autonomy-levels)
 - [Getting Started](#getting-started)
 - [Building Fully Autonomous Agents](#building-fully-autonomous-agents)
 - [Demo Scenario](#demo-scenario)
@@ -314,16 +313,12 @@ Agents determine which role to take based on:
 - **Capability matching**: Agent has required capabilities
 - **Automatic validation**: Incompatible roles rejected
 
-No hardcoded role names needed!
-
 #### Class-Based Discovery
 
 Agents find artifacts by semantic type:
 - **Type-based search**: Query by `ex:Rug`, not exact URI
 - **Workspace crawling**: Autonomous navigation through hierarchy
 - **Hypermedia-driven**: Pure HATEOAS navigation
-
-No hardcoded paths needed!
 
 #### Dynamic Role Binding
 
@@ -348,26 +343,18 @@ MasterThesis/
 ├── README.md                          # This file
 ├── requirements.txt
 │
-├── paper/                             # Master's thesis LaTeX source
-│   ├── 02_implementation.tex          # Implementation chapter
-│   ├── 07_evaluation.tex              # Evaluation chapter
-│   └── ...
-│
 ├── bspl/                              # BSPL core library
 │   ├── src/bspl/
-│   │   ├── adapter/
-│   │   │   ├── core.py                # Base Adapter
-│   │   │   ├── meta_adapter.py        # MetaAdapter with role negotiation
-│   │   │   └── ...
-│   │   ├── protocol.py                # Protocol classes
-│   │   └── verification/              # Protocol verification
-│   └── samples/                       # Sample BSPL protocols
+│       ├── adapter/
+│           ├── core.py                # Base Adapter
+│           ├── meta_adapter.py        # MetaAdapter with role negotiation
+│           └── ...
 │
 ├── HypermediaInteractionProtocols/    # Implementation
 │   ├── agents/
-│   │   ├── HypermediaMetaAdapter.py   # Unified adapter framework ⭐
+│   │   ├── HypermediaMetaAdapter.py   # Unified adapter framework
 │   │   ├── HypermediaTools.py         # Discovery & reasoning utilities
-│   │   ├── buyer_agent.py             # Autonomous buyer agent (demo) ⭐
+│   │   ├── buyer_agent.py             # Autonomous buyer agent (demo)
 │   │   ├── bazaar_agent.py            # Seller agent (Buy protocol)
 │   │   └── supermarket_agent.py       # Seller agent (BuyTwo protocol)
 │   │
@@ -386,27 +373,8 @@ MasterThesis/
 │   │
 │   └── start.sh                       # Demo startup script
 │
-└── yggdrasil/                         # Yggdrasil hypermedia platform source
+└── yggdrasil/                         # Yggdrasil hypermedia platform source OLD
 ```
-
-## Documentation
-
-### Academic Documentation
-
-The implementation is documented in detail in the master's thesis:
-
-- **`paper/02_implementation.tex`** - Complete implementation documentation including:
-  - Layer 1: Protocol Engine (BSPL Adapter and MetaAdapter)
-  - Layer 2: Hypermedia Coordination Layer (HypermediaMetaAdapter and HypermediaTools)
-  - Layer 3: Agent-Level Implementation
-  - Integration with Yggdrasil Platform
-
-- **`paper/07_evaluation.tex`** - Comprehensive evaluation including:
-  - Demonstration scenario with two workspaces
-  - Agent implementation analysis
-  - Framework capability assessment
-  - Critical analysis of limitations
-  - Comparison to alternative approaches
 
 ### Code Documentation
 
@@ -414,33 +382,6 @@ The implementation is documented in detail in the master's thesis:
 - **`HypermediaTools.py`** - Discovery and reasoning utilities with detailed docstrings
 - **`buyer_agent.py`** - Complete example with extensive comments
 - **`bspl/`** - BSPL library with protocol samples and verification tools
-
-## Key Innovations
-
-### 1. Semantic Role Reasoning
-Agents reason about which role to take based on:
-- **Goals** (what they want to achieve: buy, sell, lease)
-- **Capabilities** (what they can do: pay, give, deliver)
-- **Protocol semantics** (role descriptions with goals and requirements)
-
-**Impact**: Eliminates hardcoded role names, enables protocol-agnostic agents
-
-### 2. Class-Based Artifact Discovery
-Agents find artifacts by semantic type, not exact URIs:
-- Query workspaces for artifacts of specific RDF classes
-- Autonomous crawling through workspace hierarchies
-- Pure hypermedia navigation (HATEOAS)
-
-**Impact**: Eliminates hardcoded paths, enables true autonomous navigation
-
-### 3. Unified Autonomous Architecture
-HypermediaMetaAdapter provides single coherent abstraction:
-- Discovery (workspaces, artifacts, protocols, agents)
-- Reasoning (role selection, capability validation)
-- Coordination (role negotiation, system formation)
-- Execution (protocol enactment, message handling)
-
-**Impact**: ~42% less code, cleaner architecture, easier to use
 
 ## Research Contributions
 
