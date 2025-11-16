@@ -8,7 +8,6 @@ This project presents a novel approach to building **fully autonomous multi-agen
 - [Key Concepts](#key-concepts)
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
-- [Building Fully Autonomous Agents](#building-fully-autonomous-agents)
 - [Demo Scenario](#demo-scenario)
 - [Project Structure](#project-structure)
 - [Documentation](#documentation)
