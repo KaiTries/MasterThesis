@@ -10,7 +10,6 @@ This project presents a novel approach to building **fully autonomous multi-agen
 - [Getting Started](#getting-started)
 - [Demo Scenario](#demo-scenario)
 - [Project Structure](#project-structure)
-- [Documentation](#documentation)
 
 ## Overview
 
