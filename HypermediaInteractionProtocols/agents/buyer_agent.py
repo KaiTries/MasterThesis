@@ -69,9 +69,9 @@ async def give_reaction(msg):
     adapter.info(f"✓ Received item: {msg['item']} for ${msg['money']}")
     return msg
 
-@adapter.enabled('BuyTwo/Pay')
+@adapter.enabled("BuyTwo/Pay")
 async def test_enabled(msg):
-     msg = msg.bind(itemID=str(int(time.time())),money=10)
+     msg = msg.bind(itemID=str(int(time.time())),money=20)
      return msg
 
 # =================================================================
@@ -128,7 +128,7 @@ async def main():
         protocol = adapter.discover_protocol_for_goal(adapter.goal_artifact_uri)
         if not protocol:
             adapter.leave_workspace()
-            return
+            break
 
         adapter.info(f"Discovered protocol: {protocol.name}")
         adapter.info("")
@@ -146,7 +146,7 @@ async def main():
         if not my_role:
             adapter.logger.error("Could not reason appropriate role")
             adapter.leave_workspace()
-            return
+            break
 
         adapter.info(f"Reasoned role: {my_role}")
 
@@ -170,7 +170,7 @@ async def main():
         if not proposed_system_name:
             adapter.info("System formation failed")
             adapter.leave_workspace()
-            continue
+            break
 
         adapter.info(f"System '{proposed_system_name}' formed with my role: {my_role}")
         adapter.info("")
@@ -187,7 +187,7 @@ async def main():
         if not system_ready:
             adapter.info("System not well-formed")
             adapter.leave_workspace()
-            continue
+            break
 
         adapter.info("")
 
@@ -202,8 +202,8 @@ async def main():
         adapter.info("")
 
         # First purchase
-        adapter.info("Purchase #1 (10$)...")
         if userInput == "rug":
+            adapter.info("Purchase #1 (10$)...")
             await adapter.initiate_protocol(
                 "Buy/Pay",
                 generate_buy_params(proposed_system_name, goal_item, 10)

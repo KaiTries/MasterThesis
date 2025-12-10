@@ -13,9 +13,6 @@ Compare with bazaar_agent.py to see the improvements.
 
 from HypermediaMetaAdapter import HypermediaMetaAdapter
 from flask import Flask, request
-import threading
-import time
-from rdflib import Graph
 from HypermediaTools import get_model, JACAMO, RDF, HypermediaAgent
 import requests
 import uuid

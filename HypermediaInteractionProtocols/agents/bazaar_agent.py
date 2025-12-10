@@ -13,9 +13,6 @@ Compare with bazaar_agent.py to see the improvements.
 
 from HypermediaMetaAdapter import HypermediaMetaAdapter
 from flask import Flask, request
-import threading
-import time
-from rdflib import Graph
 from HypermediaTools import get_model, JACAMO, RDF, HypermediaAgent
 import requests
 
@@ -60,7 +57,7 @@ def callback():
     g = get_model(turtle_data)
 
     # Find new agents in workspace
-    agents_local = set()
+    agents_local: set[str] = set()
     for subj in g.subjects(RDF.type, JACAMO.Body):
         # Don't add self
         if 'body_bazaar_agent' not in str(subj):
@@ -111,7 +108,7 @@ def setup_websub_callback():
 # =================================================================
 # Capabilities - Message handlers
 # =================================================================
-@adapter.enabled("Buy/Give")
+@adapter.enabled("Give")
 async def send_give(msg):
     """
     Automatically send Give message when enabled after receiving Pay.
