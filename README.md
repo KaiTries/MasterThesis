@@ -1,11 +1,5 @@
 # Interaction Protocol and Hypermedia based Multi-Agent Systems
 
-
-
-https://github.com/user-attachments/assets/34d003bc-a8fb-4dc8-b329-5d059d089502
-
-
-
 This project presents a novel approach to building **fully autonomous multi-agent systems** that combine **BSPL (Blindingly Simple Protocol Language) interaction protocols** with **semantic hypermedia-driven discovery** and **autonomous role reasoning**. The system enables agents to autonomously discover their environment, reason about which roles to take, and collaborate through formally specified protocols—all without requiring centralized coordination or hardcoded knowledge.
 
 ## Table of Contents
