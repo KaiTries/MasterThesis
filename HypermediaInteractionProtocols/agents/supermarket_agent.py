@@ -108,13 +108,13 @@ def setup_websub_callback():
 # =================================================================
 # Capabilities - Message handlers
 # =================================================================
-@adapter.enabled("Buy/Give")
+@adapter.enabled("BuyTwo/Give")
 async def send_give(msg):
     """
     Automatically send Give message when enabled after receiving Pay.
     This is the core business logic for the seller.
     """
-    adapter.info(f"Received payment for {msg['itemID']}, preparing to send item...")
+    adapter.info(f"Received payment of {msg['money']} for {msg['itemID']}, preparing to send item...")
     # Bind the 'item' parameter with the requested item
     return msg.bind(item=msg['itemID'])
 
