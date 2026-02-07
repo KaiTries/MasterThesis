@@ -25,16 +25,7 @@ This project presents a novel approach to building **fully autonomous multi-agen
 pip install -r requirements.txt
 ```
 
-2. Build and add the environment provider (Yggdrasil) NOT NEEDED ANYMORE BINARY IS ADDED TO ENV
-
-```bash
-cd yggdrasil
-./gradlew
-cd ..
-mv yggdrasil/build/libs/yggdrasil-0.0.0-SNAPSHOT-all.jar HypermediaInteractionProtocols/env
-```
-
-3. Install custom BSPL version with MetaAdapter
+2. Install custom BSPL version with MetaAdapter
 
 ```bash
 cd bspl
