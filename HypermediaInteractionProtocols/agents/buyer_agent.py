@@ -217,8 +217,7 @@ async def main():
             )
 
         await asyncio.sleep(3)
-        userInput = await asyncio.get_event_loop().run_in_executor(None, input("Enter Product you want to buy (exit to exit)"))
-
+        userInput = await asyncio.get_event_loop().run_in_executor(None, lambda: input("Enter product you want to buy (exit to exit):"))
         # ========================================
         # STEP 6: Clean Up
         # ========================================
