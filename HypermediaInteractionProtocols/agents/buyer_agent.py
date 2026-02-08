@@ -111,7 +111,7 @@ async def main():
     """
     adapter.start_in_loop()
 
-    userInput = input("Enter product you want to buy:")
+    userInput = await asyncio.get_event_loop().run_in_executor(None, lambda: input("Enter product you want to buy:"))
     while userInput != "exit":
         goal_item = GOAL_ITEM_CLASS if userInput == 'rug' else 'http://example.org/Grill'
         adapter.goal_type=GOAL_TYPE
@@ -217,7 +217,7 @@ async def main():
             )
 
         await asyncio.sleep(3)
-        userInput = input()
+        userInput = await asyncio.get_event_loop().run_in_executor(None, input("Enter Product you want to buy (exit to exit)"))
 
         # ========================================
         # STEP 6: Clean Up

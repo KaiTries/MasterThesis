@@ -66,7 +66,7 @@ class MetaAdapter(Adapter):
         When a Candidate rejects a role offer this function is called
         """
         async def _reject_handler(msg: Message):
-            candidate = msg.meta['system'].split("::")[-1]
+            candidate = msg.meta['system'].split("::")[2]
             # TODO: Need better way to handle reactors correctly
             if candidate == self.name:
                 self.info(f"candidate does not need to react to own reject message!")
@@ -80,7 +80,7 @@ class MetaAdapter(Adapter):
         When a Candidate accepts a role offer this function is called
         """
         async def _accept_handler(msg: Message):
-            candidate = msg.meta['system'].split("::")[-1]
+            candidate = msg.meta['system'].split("::")[2]
             # TODO: Need better way to handle reactors correctly
             if candidate == self.name:
                 self.info(f"candidate does not need to react to own accept message!")
@@ -103,7 +103,7 @@ class MetaAdapter(Adapter):
         Currently accepts a role if we are capable
         """
         async def _role_proposal_handler(msg: Message):
-            candidate = msg.meta['system'].split("::")[-1]
+            candidate = msg.meta['system'].split("::")[2]
             # TODO: Need better way to handle reactors correctly
             if candidate != self.name:
                 self.info(f"Initiator doesnt answer own message!")
@@ -142,7 +142,7 @@ class MetaAdapter(Adapter):
         When a candidate receives a system details message this function is called
         """
         async def _system_details_handler(msg: Message):
-            candidate = msg.meta['system'].split("::")[-1]
+            candidate = msg.meta['system'].split("::")[2]
             # TODO: Need better way to handle reactors correctly
             if candidate != self.name:
                 self.info(f"Initiator already knows system details")
@@ -160,6 +160,11 @@ class MetaAdapter(Adapter):
         self.reactors["RoleNegotiation/Accept"] = [self.accept_handler()]
         self.reactors["RoleNegotiation/OfferRole"] = [self.role_proposal_handler()]
         self.reactors["RoleNegotiation/SystemDetails"] = [self.system_details_handler()]
+
+    def reset_interaction_state(self):
+        """Clear state from previous interactions to prepare for a new one."""
+        self.proposed_systems = SystemStore({})
+        self.negotiations_proposed_systems_map = {}
 
     def propose_system(self, system_name, system_dict) -> str:
         if system_name in self.proposed_systems.systems:
@@ -202,8 +207,8 @@ class MetaAdapter(Adapter):
 
     async def offer_role_for_system(self, system_name, role, candidate):
         meta_protocol_system = get_system_for_meta_protocol(self.name, candidate)
-        meta_protocol_system_name = f"RoleNegotiation::{role}::{candidate}"
         negotiation_id = new_uuid()
+        meta_protocol_system_name = f"RoleNegotiation::{role}::{candidate}::{negotiation_id}"
 
         self.add_system(meta_protocol_system_name, meta_protocol_system)
         self.negotiations_proposed_systems_map[system_name].append(Negotiation(meta_protocol_system_name, negotiation_id))

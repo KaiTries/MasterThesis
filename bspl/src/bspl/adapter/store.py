@@ -201,17 +201,23 @@ class Store:
             # bindings that only match on a subset of keys are ok
             # bindings with any contradictory keys are not; should be handled by integrity though
             # this logic is not quite correct, and is inefficient - TODO
+            found = False
             c = context
             while c:
                 if message.payload[p] in c.all_bindings.get(p, []):
-                    return True
+                    found = True
+                    break
                 else:
                     c = c.parent
-            print(f"message: {message}, ins: {message.schema.ins}")
-            print(f"context: {context}")
-            logger.info(f"{p} is not found in {context.all_bindings}")
-            exit(1)
-            return False
+            # Fall back to searching the root system context; handles cases where
+            # messages with different key sets end up in separate context branches
+            if not found:
+                root = self.contexts.get(message.system)
+                if root and message.payload[p] in root.all_bindings.get(p, []):
+                    found = True
+            if not found:
+                logger.info(f"{p} is not found in {context.all_bindings}")
+                return False
         return True
 
     def check_emissions(self, messages, use_context=None):

@@ -182,6 +182,7 @@ class HypermediaMetaAdapter(MetaAdapter):
         if success:
             self._joined = False
             self.artifact_address = None
+            self.reset_interaction_state()
             self.info("Successfully left workspace")
         else:
             self.warning("Failed to leave workspace")
